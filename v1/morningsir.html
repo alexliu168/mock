@@ -56,15 +56,14 @@
 
         <div class="toolbar">
           <button class="btn secondary" id="btnPlay">▶︎ 播放</button>
-          <button class="btn primary" id="btnRecord">● 錄音</button>
+          <button class="btn secondary" id="btnRecord">● 錄音</button>
           <button class="btn secondary" id="btnStop" disabled>■ 停止</button>
-          <button class="btn ghost" id="btnPlayback" disabled>🔁 回放</button>
+          <button class="btn secondary" id="btnPlayback" disabled>🔁 回放</button>
           <button class="btn success" id="btnScore" disabled>★ 評分</button>
         </div>
 
         <div id="result" class="result"></div>
-  <div class="row row--mt-sm">
-          <button class="btn secondary" onclick="backToCourses()">← 返回</button>
+        <div class="row row--mt-sm">
           <button class="btn primary right" id="btnNext" disabled>下一張 →</button>
         </div>
 
@@ -109,10 +108,22 @@
 
   <!-- 底部導覽 -->
   <nav class="tabbar">
-    <div class="tab active" data-tab="home">主頁</div>
-    <div class="tab" data-tab="practice">練習</div>
-    <div class="tab" data-tab="reports">報告</div>
-    <div class="tab" data-tab="profile">我的</div>
+    <div class="tab active" data-tab="home" data-icon-default="assets/tabbar/home.png" data-icon-selected="assets/tabbar/home_selected.png">
+      <img src="assets/tabbar/home_selected.png" alt="主頁">
+      <div class="tab-label">主頁</div>
+    </div>
+    <div class="tab" data-tab="practice" data-icon-default="assets/tabbar/practice.png" data-icon-selected="assets/tabbar/practice_selected.png">
+      <img src="assets/tabbar/practice.png" alt="練習">
+      <div class="tab-label">練習</div>
+    </div>
+    <div class="tab" data-tab="reports" data-icon-default="assets/tabbar/reports.png" data-icon-selected="assets/tabbar/reports_selected.png">
+      <img src="assets/tabbar/reports.png" alt="報告">
+      <div class="tab-label">報告</div>
+    </div>
+    <div class="tab" data-tab="profile" data-icon-default="assets/tabbar/profile.png" data-icon-selected="assets/tabbar/profile_selected.png">
+      <img src="assets/tabbar/profile.png" alt="我的">
+      <div class="tab-label">我的</div>
+    </div>
   </nav>
 
   <script>
@@ -151,13 +162,22 @@
       Tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
       const nick = qs('#nickname'); nick.value = store.nick; nick.addEventListener('change', e=>store.nick=e.target.value);
       renderCourses(); updateReports(); wirePracticeControls();
+      // initialize tab icons
+      Tabs.forEach(tab => {
+        const img = tab.querySelector('img');
+        if(!img) return;
+        const sel = tab.classList.contains('active');
+        img.src = sel ? tab.dataset.iconSelected : tab.dataset.iconDefault;
+      });
     });
 
-    function switchTab(tab){ Object.values(Views).forEach(v => v.classList.remove('active')); qs('#'+tab).classList.add('active'); Tabs.forEach(t => t.classList.toggle('active', t.dataset.tab===tab)); }
-    function backToCourses(){ sessionBox.classList.add('hidden'); qs('#courseList').classList.remove('hidden');
-      // show the practice header again when returning to the course list
-      const practiceHeader = qs('#practice h2'); if(practiceHeader) practiceHeader.classList.remove('hidden');
-      session = null; }
+    function switchTab(tab){ Object.values(Views).forEach(v => v.classList.remove('active')); qs('#'+tab).classList.add('active');
+      Tabs.forEach(t => {
+        const isActive = t.dataset.tab===tab;
+        t.classList.toggle('active', isActive);
+        const img = t.querySelector('img'); if(img) img.src = isActive ? t.dataset.iconSelected : t.dataset.iconDefault;
+      });
+    }
 
     // ====== 課程清單 ======
     function renderCourses(){
