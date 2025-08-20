@@ -287,7 +287,9 @@
     }
 
     function loadCard(){
-      const total = session.course.phrases.length; if(session.idx>=total){ return endSession(); }
+  const total = session.course.phrases.length; if(session.idx>=total){ return endSession(); }
+  // ensure any swipe animation classes are cleared
+  card.classList.remove('animating','swipe-left','swipe-right');
       const p = session.course.phrases[session.idx]; fcZh.textContent = p.zh; fcEn.textContent = p.en;
       chips.innerHTML = ''; (p.en.split(/\s+/).slice(0,4)).forEach(w=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=w.replace(/[^a-zA-Z']/g,''); chips.appendChild(s); });
       counter.textContent = `${session.idx+1}/${total}`; progressBar.style.width = `${((session.idx)/total)*100}%`;
@@ -353,13 +355,18 @@
       if(touchX==null) return;
       const dx = e.changedTouches[0].clientX - touchX; touchX=null;
       if(Math.abs(dx) < 40) return; // ignore small moves
-      if(dx>0){ // swipe right -> mark hard
-        markHard();
-      } else { // swipe left -> mark easy
-        markEasy();
-      }
-      // advance to next card after marking
-      if(session){ session.idx += 1; loadCard(); }
+      const isRight = dx>0;
+      // trigger animation class
+      card.classList.add('animating', isRight ? 'swipe-right' : 'swipe-left');
+      // mark according to swipe
+      if(isRight) markHard(); else markEasy();
+      // advance after animation ends
+      const onEnd = ()=>{
+        card.removeEventListener('transitionend', onEnd);
+        card.classList.remove('animating','swipe-right','swipe-left');
+        if(session){ session.idx += 1; loadCard(); }
+      };
+      card.addEventListener('transitionend', onEnd);
     });
     function markHard(){ session.hard.add(session.idx); toast('已加入多練'); }
     function markEasy(){ session.easy.add(session.idx); toast('已標記為已認識'); }

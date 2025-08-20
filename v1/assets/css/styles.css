@@ -53,6 +53,10 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 .progress{height:4px;background:#e5e7eb;border-radius:999px;overflow:hidden}
 .progress>div{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#2563eb)}
 .flashcard{margin-top:12px;padding:22px;min-height:200px;display:flex;flex-direction:column;gap:14px;justify-content:center;border-radius:20px;background:rgba(255,255,255,var(--background-opacity));box-shadow:var(--shadow);touch-action:pan-y}
+.flashcard{transition:transform 320ms cubic-bezier(.2,.9,.2,1), opacity 280ms ease; will-change: transform, opacity}
+.flashcard.animating{pointer-events:none}
+.flashcard.swipe-left{transform:translateX(-110%) rotate(-8deg);opacity:0}
+.flashcard.swipe-right{transform:translateX(110%) rotate(8deg);opacity:0}
 .flashcard .en{font-size:22px;font-weight:800;letter-spacing:.2px}
 .flashcard .zh{font-size:16px;color:var(--muted)}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid #e5e7eb;background:rgba(255,255,255,var(--background-opacity))}
@@ -70,12 +74,18 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 .summary{display:none} .summary.visible{display:block}
 .summary .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .kpi{padding:14px;border-radius:14px;background:rgba(255,255,255,var(--background-opacity));box-shadow:var(--shadow)}
-.tabbar{position:fixed;left:0;right:0;background:#ffffff;border-top:1px solid #e5e7eb;display:flex;box-sizing:border-box;
+.tabbar{position:fixed;left:0;right:0;background:#ffffff !important;border-top:1px solid #e5e7eb;display:flex;box-sizing:border-box;
 	/* lift tabbar above the home indicator and remove bottom white gap */
 	bottom: env(safe-area-inset-bottom, 0px);
 	padding-bottom: env(safe-area-inset-bottom, 0px);
 	height: calc(64px + env(safe-area-inset-bottom, 0px));
 	z-index:30;
+	/* be explicit for iOS PWAs which may apply translucency/backdrop by default */
+	-webkit-backdrop-filter: none !important;
+	backdrop-filter: none !important;
+	background-image: none !important;
+	background-color: #ffffff !important;
+	box-shadow: 0 -6px 20px rgba(2,8,23,0.04);
 }
 /* Ensure tab icons are fully opaque and sized consistently */
 .tab img{opacity:1;display:block;width:24px;height:auto;-webkit-filter:none;filter:none}
