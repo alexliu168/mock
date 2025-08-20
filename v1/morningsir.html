@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Morning SIR! — 服務用語訓練 </title>
+  <style>
+    :root{ --brand:#0A66FF; --ink:#0F172A; --muted:#64748B; --bg:#F8FAFC; --card:#FFFFFF; --accent:#111827; --radius:16px; --shadow:0 10px 30px rgba(2,8,23,.08); --background-opacity: 0.8; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{ margin:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial; color:var(--ink); background:var(--bg); }
+    .appbar{ position:sticky; top:0; height:56px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; background:var(--brand); }
+    .hero{ background:#eaf3ff url('assets/img/bg-airport.jpg') no-repeat center/cover; height:140px; display:flex; align-items:end; padding:16px; color:#06337a; font-weight:600; border-bottom:1px solid #e2e8f0; }
+    .view{padding:16px} .card{background:rgba(255, 255, 255, var(--background-opacity)); border-radius:var(--radius); box-shadow:var(--shadow)}
+    .list{display:grid; gap:12px}
+    .course{ display:flex; gap:12px; align-items:center; padding:14px 16px; cursor:pointer; }
+    .course:hover{outline:2px solid #dbeafe}
+    .avatar{width:42px;height:42px;border-radius:12px;background:#e2e8f0;display:grid;place-items:center;font-weight:700;color:#334155}
+    .meta{flex:1} .title{font-weight:700} .sub{font-size:12px;color:var(--muted)}
+    .panel{display:none} .panel.active{display:block}
+    .flashcard-wrap{position:relative; margin-top:10px}
+    .progress{height:4px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .progress>div{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#2563eb)}
+    .flashcard{margin-top:12px;padding:22px;min-height:200px;display:flex;flex-direction:column;gap:14px;justify-content:center;border-radius:20px;background:#fff;box-shadow:var(--shadow);touch-action:pan-y}
+    .flashcard .en{font-size:22px;font-weight:800;letter-spacing:.2px}
+    .flashcard .zh{font-size:16px;color:var(--muted)}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid #e5e7eb;background:#fff}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .btn{appearance:none;border:none;border-radius:12px;padding:14px 16px;font-weight:700;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.secondary{background:#fff;border:1px solid #e5e7eb}
+    .btn.ghost{background:transparent;border:1px dashed #cbd5e1}
+    .btn.success{background:#16a34a;color:#fff}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .result{margin-top:10px;padding:12px 14px;border-radius:14px;background:#f1f5f9;display:none}
+    .result.visible{display:block} .score{font-weight:800}
+    .mistake{display:inline-block;padding:6px 10px;border-radius:999px;background:#fee2e2;color:#991b1b;margin-right:8px;font-size:12px}
+    .summary{display:none} .summary.visible{display:block}
+    .summary .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .kpi{padding:14px;border-radius:14px;background:#fff;box-shadow:var(--shadow)}
+    .tabbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;height:64px}
+    .tab{flex:1;display:grid;place-items:center;color:#475569;font-size:12px;cursor:pointer}
+    .tab.active{color:var(--brand);font-weight:700}
+    .spacer{height:74px} .row{display:flex;gap:10px;align-items:center} .right{margin-left:auto} .muted{color:var(--muted)} .hidden{display:none}
+  </style>
+</head>
+<body>
+  <header class="appbar">Morning SIR! — 服務用語訓練</header>
+  <div class="hero">
+    <div>
+      <div style="font-size:18px">AVSECO · 內部演示</div>
+      <div style="font-size:13px;opacity:.8">針對旅客服務場景的英語用語練習（本示範採用本地音檔與模擬評分）</div>
+    </div>
+  </div>
+
+  <main id="views">
+    <!-- 主頁 -->
+    <section id="home" class="view panel active">
+      <div class="card" style="padding:16px">
+        <h2 style="margin:0 0 8px 0">歡迎使用</h2>
+        <p class="muted" style="margin:0">這是一個瀏覽器版示範，使用預錄英語音檔與<b>模擬評分</b>。大多數行動瀏覽器可錄音，無需外部審批。</p>
+        <div class="row" style="margin-top:14px">
+          <button class="btn secondary" onclick="switchTab('practice')">前往練習</button>
+          <button class="btn primary" onclick="alert('Morning SIR! H5 示範 — 模擬評分、本地音檔、無外部依賴。')">關於本示範</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習：課程列表 + 閃卡 -->
+    <section id="practice" class="view panel">
+      <h2>課程列表</h2>
+      <div id="courseList" class="list"></div>
+
+      <div id="session" class="hidden">
+        <div class="row">
+          <div id="courseTitle" style="font-weight:800"></div>
+          <div class="right muted" id="counter">0/0</div>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+
+        <div id="flashcard" class="flashcard" aria-live="polite">
+          <div class="zh" id="fcZh">—</div>
+          <div class="en" id="fcEn">—</div>
+          <div class="chips" id="chips"></div>
+          <div class="hint">向<b>左滑</b>＝已認識 • 向<b>右滑</b>＝加入多練</div>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn secondary" id="btnPlay">▶︎ 播放</button>
+          <button class="btn primary" id="btnRecord">● 錄音</button>
+          <button class="btn secondary" id="btnStop" disabled>■ 停止</button>
+          <button class="btn ghost" id="btnPlayback" disabled>🔁 回放</button>
+          <button class="btn success" id="btnScore" disabled>★ 評分</button>
+        </div>
+
+        <div id="result" class="result"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn secondary" onclick="backToCourses()">← 返回</button>
+          <button class="btn primary right" id="btnNext" disabled>下一張 →</button>
+        </div>
+
+        <div id="summary" class="summary card" style="padding:16px; margin-top:16px">
+          <h3 style="margin:0">本次練習總結</h3>
+          <div class="grid">
+            <div class="kpi"><div class="muted">卡片數</div><div id="smCards" class="en">0</div></div>
+            <div class="kpi"><div class="muted">平均分</div><div id="smAvg" class="en">—</div></div>
+            <div class="kpi"><div class="muted">需要多練</div><div id="smHard" class="en">0</div></div>
+            <div class="kpi"><div class="muted">已認識</div><div id="smEasy" class="en">0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+    </section>
+
+    <!-- 報告 -->
+    <section id="reports" class="view panel">
+      <h2>報告（示範）</h2>
+      <div class="card" style="padding:16px">
+        <p class="muted">此頁僅展示您在本裝置上的簡單練習統計（示範）。</p>
+        <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="kpi"><div class="muted">練習次數</div><div id="rSessions" class="en">0</div></div>
+          <div class="kpi"><div class="muted">平均分</div><div id="rAvg" class="en">—</div></div>
+        </div>
+      </div>
+      <div class="spacer"></div>
+    </section>
+
+    <!-- 我的 -->
+    <section id="profile" class="view panel">
+      <h2>我的</h2>
+      <div class="card" style="padding:16px">
+        <label class="muted" for="nickname">暱稱</label>
+        <input id="nickname" placeholder="請輸入暱稱" style="display:block;width:100%;padding:12px;margin-top:6px;border-radius:10px;border:1px solid #e5e7eb"/>
+        <div class="hint">僅作示範用途，資料儲存在本機瀏覽器。</div>
+      </div>
+      <div class="spacer"></div>
+    </section>
+  </main>
+
+  <!-- 底部導覽 -->
+  <nav class="tabbar">
+    <div class="tab active" data-tab="home">主頁</div>
+    <div class="tab" data-tab="practice">練習</div>
+    <div class="tab" data-tab="reports">報告</div>
+    <div class="tab" data-tab="profile">我的</div>
+  </nav>
+
+  <script>
+    // ====== 課程資料（包含 AVSECO 基礎 10 句） ======
+    const COURSES = [
+      {
+        id: 'avseco', title: 'AVSECO 基礎', color:'#dbeafe', cover:'assets/img/cover-avseco.jpg',
+        phrases: [
+          { zh: '先生/女士，這是受限制物品。您可以聯絡航空公司協助、辦理物品收據，或選擇棄置。', en: 'Sir/Madam, this is a restricted article. You may choose to seek your airline\'s assistance or get a property receipt, or dispose of it.', audio: 'assets/audio/avseco1.mp3' },
+          { zh: '不好意思，先生/女士，這件物品屬於受限制物品，基於安全原因不能帶上飛機。', en: 'Excuse me, Sir/Madam. The item is a restricted article and for safety reasons cannot be taken on board the plane.', audio: 'assets/audio/avseco2.mp3' },
+          { zh: '請站在腳印上，跟隨指示，雙手張開。謝謝。', en: 'Please stand on this footprint, follow this sign and spread out your hands. Thank you.', audio: 'assets/audio/avseco3.mp3' },
+          { zh: '您好，先生/女士，請將所有隨身物品放入托盤，謝謝。', en: 'Hello, Sir/Madam. Please place all your belongings into the tray. Thank you.', audio: 'assets/audio/avseco4.mp3' },
+          { zh: '不好意思，先生/女士，我們需要隨機手檢。請把口袋內所有物品取出，放到這個黑色托盤。', en: 'Excuse me, Sir/Madam. This is a random hand search. Please take out all the items from your pockets and put them in this black tray.', audio: 'assets/audio/avseco5.mp3' },
+          { zh: '不好意思，先生/女士，您的護照沒有晶片。請到人工協助通道，這邊請。', en: "Sorry, Sir/Madam. Your passport doesn't have a chip. Let me direct you to the assisted channel right this way.", audio: 'assets/audio/avseco6.mp3' },
+          { zh: '攜帶小童的旅客可使用家庭通道。請按照指示前往人工協助通道。', en: 'For our younger travellers, we have a special family lane. Please follow the signs to the assisted channel.', audio: 'assets/audio/avseco7.mp3' },
+          { zh: '請向前一步／向後一步／站在腳印上，並看向攝像頭。', en: 'Please step forward / backward / stand on this footprint and look at the camera.', audio: 'assets/audio/avseco8.mp3' },
+          { zh: '通過海關後，機場快綫車站位於到達大堂的對面。', en: 'After passing through customs, the airport express station is located on the opposite side of the arrival hall.', audio: 'assets/audio/avseco9.mp3' },
+          { zh: '不好意思，先生/女士，您不能返回行李提取大堂。', en: 'Excuse me, Sir/ Madam, you are not allowed to return to the Baggage Reclaim Hall.', audio: 'assets/audio/avseco10.mp3' }
+        ]
+      }
+    ];
+
+    // ====== 狀態儲存 ======
+    const Views = { home: qs('#home'), practice: qs('#practice'), reports: qs('#reports'), profile: qs('#profile') };
+    const Tabs = $$('.tab');
+    let session = null; // {course, idx, results:[], hard:Set, easy:Set}
+    const store = {
+      get nick(){ return localStorage.getItem('ms_nick')||'' },
+      set nick(v){ localStorage.setItem('ms_nick', v||'') },
+      get stats(){ return JSON.parse(localStorage.getItem('ms_stats')||'{"sessions":0,"scores":[]}') },
+      set stats(v){ localStorage.setItem('ms_stats', JSON.stringify(v)) }
+    }
+
+    // ====== 初始化 ======
+    document.addEventListener('DOMContentLoaded', () => {
+      Tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+      const nick = qs('#nickname'); nick.value = store.nick; nick.addEventListener('change', e=>store.nick=e.target.value);
+      renderCourses(); updateReports(); wirePracticeControls();
+    });
+
+    function switchTab(tab){ Object.values(Views).forEach(v => v.classList.remove('active')); qs('#'+tab).classList.add('active'); Tabs.forEach(t => t.classList.toggle('active', t.dataset.tab===tab)); }
+    function backToCourses(){ sessionBox.classList.add('hidden'); qs('#courseList').classList.remove('hidden'); session = null; }
+
+    // ====== 課程清單 ======
+    function renderCourses(){
+      const wrap = qs('#courseList'); wrap.innerHTML = '';
+      COURSES.forEach(c => {
+        const el = document.createElement('div'); el.className='card course';
+        el.innerHTML = `
+          <div class="avatar" style="background:${c.color||'#e2e8f0'}">${c.title[0]}</div>
+          <div class="meta"><div class="title">${c.title}</div><div class="sub">${c.phrases.length} 句 · 英/中</div></div>
+          <div class="right muted">開始 →</div>`;
+        el.addEventListener('click', () => startSession(c)); wrap.appendChild(el);
+      });
+    }
+
+    // ====== 練習流程 ======
+    const sessionBox = qs('#session');
+    const counter = qs('#counter'); const progressBar = qs('#progressBar');
+    const fcZh = qs('#fcZh'); const fcEn = qs('#fcEn'); const chips = qs('#chips');
+    const btnPlay = qs('#btnPlay'); const btnRecord = qs('#btnRecord'); const btnStop = qs('#btnStop');
+    const btnPlayback = qs('#btnPlayback'); const btnScore = qs('#btnScore'); const btnNext = qs('#btnNext');
+    const resultBox = qs('#result');
+    let mediaRecorder, recordedChunks = [], recordedBlob = null, audioEl = new Audio();
+    // Fallback recorder state (for iOS Safari / browsers without MediaRecorder or unsupported mime types)
+    let fallbackRecorder = null;
+
+    // Helper: encode Float32 samples to WAV ArrayBuffer
+    function encodeWAV(samples, sampleRate){
+      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const view = new DataView(buffer);
+      function writeString(offset, s){ for(let i=0;i<s.length;i++) view.setUint8(offset+i, s.charCodeAt(i)); }
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + samples.length*2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, samples.length * 2, true);
+      let offset = 44;
+      for(let i=0;i<samples.length;i++){
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        offset += 2;
+      }
+      return view;
+    }
+
+    // Start a fallback recorder using Web Audio API that produces WAV
+    async function startRecordingFallback(stream){
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if(!AudioCtx){ alert('此裝置不支援錄音。'); return; }
+      const audioCtx = new AudioCtx();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+      const samples = [];
+      processor.onaudioprocess = (e)=>{ samples.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
+      source.connect(processor);
+      // prevent audible output by routing through a zero-gain node
+      const zeroGain = audioCtx.createGain(); zeroGain.gain.value = 0;
+      processor.connect(zeroGain);
+      zeroGain.connect(audioCtx.destination);
+      fallbackRecorder = {
+        audioCtx, source, processor, samples,
+        stop(){
+          // concatenate
+          const total = this.samples.reduce((s,a)=>s+a.length, 0);
+          const merged = new Float32Array(total);
+          let off=0; this.samples.forEach(s=>{ merged.set(s, off); off+=s.length; });
+          const wav = encodeWAV(merged, this.audioCtx.sampleRate);
+          recordedBlob = new Blob([wav], { type: 'audio/wav' });
+          enable([btnPlayback, btnScore]);
+          // cleanup
+          try{ this.processor.disconnect(); this.source.disconnect(); this.audioCtx.close(); }catch(e){}
+          fallbackRecorder = null;
+        }
+      };
+      // mark UI
+      btnRecord.disabled = true; btnStop.disabled = false; resultBox.classList.remove('visible');
+    }
+
+    // Start a MediaRecorder if available (prefer webm/ogg/mp4 where supported)
+    function startRecordingWithMediaRecorder(stream){
+      recordedChunks = []; recordedBlob = null;
+      let options = {};
+      try{
+        if(MediaRecorder.isTypeSupported('audio/webm')) options.mimeType='audio/webm';
+        else if(MediaRecorder.isTypeSupported('audio/ogg')) options.mimeType='audio/ogg';
+        else if(MediaRecorder.isTypeSupported('audio/mp4')) options.mimeType='audio/mp4';
+      }catch(e){}
+      try{ mediaRecorder = new MediaRecorder(stream, options); }catch(e){ mediaRecorder = new MediaRecorder(stream); }
+      mediaRecorder.ondataavailable = e=>{ if(e.data && e.data.size>0) recordedChunks.push(e.data); };
+      mediaRecorder.onstop = ()=>{ recordedBlob = new Blob(recordedChunks, { type: recordedChunks[0]?.type || options.mimeType || 'audio/webm' }); enable([btnPlayback, btnScore]); };
+      mediaRecorder.start(); btnRecord.disabled = true; btnStop.disabled = false; resultBox.classList.remove('visible');
+    }
+
+    function startSession(course){
+      qs('#courseTitle').textContent = course.title; qs('#summary').classList.remove('visible');
+      session = { course, idx:0, results:[], hard:new Set(), easy:new Set() };
+      qs('#courseList').classList.add('hidden'); sessionBox.classList.remove('hidden'); loadCard();
+    }
+
+    function loadCard(){
+      const total = session.course.phrases.length; if(session.idx>=total){ return endSession(); }
+      const p = session.course.phrases[session.idx]; fcZh.textContent = p.zh; fcEn.textContent = p.en;
+      chips.innerHTML = ''; (p.en.split(/\s+/).slice(0,4)).forEach(w=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=w.replace(/[^a-zA-Z']/g,''); chips.appendChild(s); });
+      counter.textContent = `${session.idx+1}/${total}`; progressBar.style.width = `${((session.idx)/total)*100}%`;
+      clearResult(); disable([btnPlayback, btnScore, btnNext]);
+    }
+
+    function endSession(){
+      progressBar.style.width = '100%';
+      const scores = session.results.map(r=>r.score); const avg = scores.length? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : null;
+      qs('#smCards').textContent = session.course.phrases.length; qs('#smAvg').textContent = avg!=null? `${avg}` : '—';
+      qs('#smHard').textContent = session.hard.size; qs('#smEasy').textContent = session.easy.size; qs('#summary').classList.add('visible');
+      const stats = store.stats; stats.sessions += 1; if(avg!=null) stats.scores.push(avg); store.stats = stats; updateReports();
+    }
+
+    function updateReports(){ const s = store.stats; qs('#rSessions').textContent = s.sessions; const avg = s.scores.length? Math.round(s.scores.reduce((a,b)=>a+b,0)/s.scores.length) : '—'; qs('#rAvg').textContent = avg; }
+
+    // ====== 音訊控制 ======
+    btnPlay.addEventListener('click', ()=>{ const p = session.course.phrases[session.idx]; audioEl.src = p.audio; audioEl.play(); });
+    btnRecord.addEventListener('click', async ()=>{
+      if(!navigator.mediaDevices){ alert('此瀏覽器不支援錄音。您仍可使用播放與模擬評分功能。'); return; }
+      try{ const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        // prefer MediaRecorder when available and supports a common type
+        if(window.MediaRecorder){
+          try{
+            startRecordingWithMediaRecorder(stream);
+            return;
+          }catch(err){ console.warn('MediaRecorder failed, falling back to WAV recorder', err); }
+        }
+        // fallback for iOS Safari or older browsers
+        await startRecordingFallback(stream);
+        return;
+       }catch(err){ alert('麥克風權限被拒或不可用。'); console.error(err); }
+    });
+    btnStop.addEventListener('click', ()=>{
+      if(mediaRecorder && mediaRecorder.state!=='inactive'){ mediaRecorder.stop(); }
+      if(fallbackRecorder){ try{ fallbackRecorder.stop(); }catch(e){ console.error(e); } }
+      btnRecord.disabled = false; btnStop.disabled = true; 
+    });
+    btnPlayback.addEventListener('click', ()=>{
+      if(!recordedBlob){ return; }
+      // iOS requires user interaction to play and prefers correct type
+      const url = URL.createObjectURL(recordedBlob);
+      audioEl.src = url; audioEl.play().catch(err=>{
+        console.warn('Playback failed:', err);
+        // fallback: create a temporary audio element and attach to DOM to ensure play is allowed
+        const tmp = document.createElement('audio'); tmp.controls = true; tmp.src = url; document.body.appendChild(tmp);
+        tmp.play().catch(e=>console.error(e));
+      });
+    });
+
+    // ====== 模擬評分 ======
+    btnScore.addEventListener('click', async ()=>{
+      showScoring(); const p = session.course.phrases[session.idx]; const words = p.en.replace(/[^a-zA-Z'\s]/g,'').split(/\s+/).filter(Boolean);
+      const base = 70 + (session.idx*7)%18; const jitter = Math.floor(Math.random()*6); const score = Math.min(99, base + jitter);
+      const mistakes = pickMistakes(words); await wait(800); showResult(score, mistakes); session.results[session.idx] = { score, mistakes }; enable([btnNext]);
+    });
+    btnNext.addEventListener('click', ()=>{ session.idx += 1; loadCard(); });
+
+    // 手勢
+    const card = qs('#flashcard'); let touchX = null;
+    card.addEventListener('touchstart', e=>{ touchX = e.changedTouches[0].clientX; },{passive:true});
+    card.addEventListener('touchend', e=>{ if(touchX==null) return; const dx = e.changedTouches[0].clientX - touchX; touchX=null; if(Math.abs(dx) < 40) return; if(dx>0){ markHard(); } else { markEasy(); } });
+    function markHard(){ session.hard.add(session.idx); toast('已加入多練'); }
+    function markEasy(){ session.easy.add(session.idx); toast('已標記為已認識'); }
+
+    function clearResult(){ resultBox.classList.remove('visible'); resultBox.innerHTML=''; }
+    function showScoring(){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class="row"><div>AI 評分中…</div><div class="right muted">~1s</div></div>`; }
+    function showResult(score, mistakes){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div><div class="right muted">模擬</div></div>` + (mistakes.length? `<div style="margin-top:8px">重點練習：${mistakes.map(m=>`<span class='mistake'>${m}</span>`).join('')}</div>` : `<div class='muted' style='margin-top:8px'>做得好！</div>`); }
+
+    // （預留）真實 API
+    async function evaluateReal(blob){ return null; }
+
+    // ====== 工具 ======
+    function qs(sel, root=document){ return root.querySelector(sel); }
+    function $$(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+    function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
+    function disable(btns){ btns.forEach(b=>b.disabled=true); }
+    function enable(btns){ btns.forEach(b=>b.disabled=false); }
+    function toast(msg){ const t = document.createElement('div'); t.textContent = msg; t.style.position='fixed'; t.style.left='50%'; t.style.bottom='80px'; t.style.transform='translateX(-50%)'; t.style.background='#111827'; t.style.color='#fff'; t.style.padding='10px 14px'; t.style.borderRadius='999px'; t.style.boxShadow='var(--shadow)'; t.style.zIndex=99; document.body.appendChild(t); setTimeout(()=>{ t.remove(); }, 900); }
+    function pickMistakes(words){ if(words.length<=2) return []; const copy=[...words]; const n = Math.random()<0.5?1:2; const out=[]; for(let i=0;i<n;i++){ const idx = Math.floor(Math.random()*copy.length); out.push(copy.splice(idx,1)[0]); } return out; }
+
+    // 兼容舊版：某些版本會呼叫 wirePracticeControls()
+    // 本檔已在內部綁好事件，這裡提供空函式避免報錯
+    function wirePracticeControls(){}
+  </script>
+</body>
+</html>
+
