@@ -1,7 +1,7 @@
 /* Extracted styles from morningsir.html */
 .header-brand{font-size:18px}
 .header-sub{font-size:13px;opacity:.8}
-.header-logo{height:28px; display:block}
+.header-logo{height:84px; display:block; width:auto; object-fit:contain}
 .card--pad{padding:16px}
 .h2--no-margin{margin:0 0 8px 0}
 .p--no-margin{margin:0}
