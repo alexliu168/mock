@@ -1,0 +1,11 @@
+{
+  "name": "Morning SIR!",
+  "short_name": "MorningSIR",
+  "start_url": "./morningsir.html",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#0A66FF",
+  "icons": [
+    { "src": "assets/img/minilogo.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

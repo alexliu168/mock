@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Morning SIR! — 服務用語訓練 </title>
   <link rel="stylesheet" href="assets/css/styles.css" />
+  <!-- Progressive Web App / iOS Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Morning SIR!">
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/img/minilogo.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0A66FF">
 </head>
 <body>
   <header class="appbar">Morning SIR! — 服務用語訓練</header>
@@ -147,7 +154,10 @@
     });
 
     function switchTab(tab){ Object.values(Views).forEach(v => v.classList.remove('active')); qs('#'+tab).classList.add('active'); Tabs.forEach(t => t.classList.toggle('active', t.dataset.tab===tab)); }
-    function backToCourses(){ sessionBox.classList.add('hidden'); qs('#courseList').classList.remove('hidden'); session = null; }
+    function backToCourses(){ sessionBox.classList.add('hidden'); qs('#courseList').classList.remove('hidden');
+      // show the practice header again when returning to the course list
+      const practiceHeader = qs('#practice h2'); if(practiceHeader) practiceHeader.classList.remove('hidden');
+      session = null; }
 
     // ====== 課程清單 ======
     function renderCourses(){
@@ -250,8 +260,10 @@
 
     function startSession(course){
       qs('#courseTitle').textContent = course.title; qs('#summary').classList.remove('visible');
-      session = { course, idx:0, results:[], hard:new Set(), easy:new Set() };
-      qs('#courseList').classList.add('hidden'); sessionBox.classList.remove('hidden'); loadCard();
+  session = { course, idx:0, results:[], hard:new Set(), easy:new Set() };
+  // hide the static "課程列表" heading when the user starts a session
+  const practiceHeader = qs('#practice h2'); if(practiceHeader) practiceHeader.classList.add('hidden');
+  qs('#courseList').classList.add('hidden'); sessionBox.classList.remove('hidden'); loadCard();
     }
 
     function loadCard(){
