@@ -4,64 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Morning SIR! — 服務用語訓練 </title>
-  <style>
-    :root{ --brand:#0A66FF; --ink:#0F172A; --muted:#64748B; --bg:#F8FAFC; --card:#FFFFFF; --accent:#111827; --radius:16px; --shadow:0 10px 30px rgba(2,8,23,.08); --background-opacity: 0.8; }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{ margin:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial; color:var(--ink); background:var(--bg); }
-    .appbar{ position:sticky; top:0; height:56px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; background:var(--brand); }
-    .hero{ background:#eaf3ff url('assets/img/bg-airport.jpg') no-repeat center/cover; height:140px; display:flex; align-items:end; padding:16px; color:#06337a; font-weight:600; border-bottom:1px solid #e2e8f0; }
-    .view{padding:16px} .card{background:rgba(255, 255, 255, var(--background-opacity)); border-radius:var(--radius); box-shadow:var(--shadow)}
-    .list{display:grid; gap:12px}
-    .course{ display:flex; gap:12px; align-items:center; padding:14px 16px; cursor:pointer; }
-    .course:hover{outline:2px solid #dbeafe}
-    .avatar{width:42px;height:42px;border-radius:12px;background:#e2e8f0;display:grid;place-items:center;font-weight:700;color:#334155}
-    .meta{flex:1} .title{font-weight:700} .sub{font-size:12px;color:var(--muted)}
-    .panel{display:none} .panel.active{display:block}
-    .flashcard-wrap{position:relative; margin-top:10px}
-    .progress{height:4px;background:#e5e7eb;border-radius:999px;overflow:hidden}
-    .progress>div{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#2563eb)}
-    .flashcard{margin-top:12px;padding:22px;min-height:200px;display:flex;flex-direction:column;gap:14px;justify-content:center;border-radius:20px;background:#fff;box-shadow:var(--shadow);touch-action:pan-y}
-    .flashcard .en{font-size:22px;font-weight:800;letter-spacing:.2px}
-    .flashcard .zh{font-size:16px;color:var(--muted)}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid #e5e7eb;background:#fff}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    .btn{appearance:none;border:none;border-radius:12px;padding:14px 16px;font-weight:700;cursor:pointer}
-    .btn.primary{background:var(--accent);color:#fff}
-    .btn.secondary{background:#fff;border:1px solid #e5e7eb}
-    .btn.ghost{background:transparent;border:1px dashed #cbd5e1}
-    .btn.success{background:#16a34a;color:#fff}
-    .hint{font-size:12px;color:var(--muted);margin-top:8px}
-    .chips{display:flex;gap:8px;flex-wrap:wrap}
-    .result{margin-top:10px;padding:12px 14px;border-radius:14px;background:#f1f5f9;display:none}
-    .result.visible{display:block} .score{font-weight:800}
-    .mistake{display:inline-block;padding:6px 10px;border-radius:999px;background:#fee2e2;color:#991b1b;margin-right:8px;font-size:12px}
-    .summary{display:none} .summary.visible{display:block}
-    .summary .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-    .kpi{padding:14px;border-radius:14px;background:#fff;box-shadow:var(--shadow)}
-    .tabbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;height:64px}
-    .tab{flex:1;display:grid;place-items:center;color:#475569;font-size:12px;cursor:pointer}
-    .tab.active{color:var(--brand);font-weight:700}
-    .spacer{height:74px} .row{display:flex;gap:10px;align-items:center} .right{margin-left:auto} .muted{color:var(--muted)} .hidden{display:none}
-  </style>
+  <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
   <header class="appbar">Morning SIR! — 服務用語訓練</header>
   <div class="hero">
     <div>
-      <div style="font-size:18px">AVSECO · 內部演示</div>
-      <div style="font-size:13px;opacity:.8">針對旅客服務場景的英語用語練習（本示範採用本地音檔與模擬評分）</div>
+  <div class="header-brand">AVSECO</div>
+  <div class="header-sub">針對旅客服務場景的英語用語練習</div>
     </div>
   </div>
 
   <main id="views">
     <!-- 主頁 -->
     <section id="home" class="view panel active">
-      <div class="card" style="padding:16px">
-        <h2 style="margin:0 0 8px 0">歡迎使用</h2>
-        <p class="muted" style="margin:0">這是一個瀏覽器版示範，使用預錄英語音檔與<b>模擬評分</b>。大多數行動瀏覽器可錄音，無需外部審批。</p>
-        <div class="row" style="margin-top:14px">
+      <div class="card card--pad">
+        <h2 class="h2--no-margin">歡迎使用</h2>
+        <p class="muted p--no-margin">這是一個瀏覽器版本，使用預錄英語音檔與本地評分機制。大多數行動瀏覽器可錄音。</p>
+        <div class="row row--mt">
           <button class="btn secondary" onclick="switchTab('practice')">前往練習</button>
-          <button class="btn primary" onclick="alert('Morning SIR! H5 示範 — 模擬評分、本地音檔、無外部依賴。')">關於本示範</button>
+          <button class="btn primary" onclick="alert('Morning SIR! H5 — 本地音檔與評分機制。')">關於本示範</button>
         </div>
       </div>
     </section>
@@ -73,7 +35,7 @@
 
       <div id="session" class="hidden">
         <div class="row">
-          <div id="courseTitle" style="font-weight:800"></div>
+          <div id="courseTitle" class="course-title"></div>
           <div class="right muted" id="counter">0/0</div>
         </div>
         <div class="progress"><div id="progressBar"></div></div>
@@ -94,13 +56,13 @@
         </div>
 
         <div id="result" class="result"></div>
-        <div class="row" style="margin-top:10px">
+  <div class="row row--mt-sm">
           <button class="btn secondary" onclick="backToCourses()">← 返回</button>
           <button class="btn primary right" id="btnNext" disabled>下一張 →</button>
         </div>
 
-        <div id="summary" class="summary card" style="padding:16px; margin-top:16px">
-          <h3 style="margin:0">本次練習總結</h3>
+        <div id="summary" class="summary card summary--card">
+          <h3 class="h3--no-margin">本次練習總結</h3>
           <div class="grid">
             <div class="kpi"><div class="muted">卡片數</div><div id="smCards" class="en">0</div></div>
             <div class="kpi"><div class="muted">平均分</div><div id="smAvg" class="en">—</div></div>
@@ -116,9 +78,9 @@
     <!-- 報告 -->
     <section id="reports" class="view panel">
       <h2>報告（示範）</h2>
-      <div class="card" style="padding:16px">
+  <div class="card card--pad">
         <p class="muted">此頁僅展示您在本裝置上的簡單練習統計（示範）。</p>
-        <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+  <div class="grid grid--two">
           <div class="kpi"><div class="muted">練習次數</div><div id="rSessions" class="en">0</div></div>
           <div class="kpi"><div class="muted">平均分</div><div id="rAvg" class="en">—</div></div>
         </div>
@@ -129,9 +91,9 @@
     <!-- 我的 -->
     <section id="profile" class="view panel">
       <h2>我的</h2>
-      <div class="card" style="padding:16px">
+  <div class="card card--pad">
         <label class="muted" for="nickname">暱稱</label>
-        <input id="nickname" placeholder="請輸入暱稱" style="display:block;width:100%;padding:12px;margin-top:6px;border-radius:10px;border:1px solid #e5e7eb"/>
+  <input id="nickname" placeholder="請輸入暱稱" class="input-nick" />
         <div class="hint">僅作示範用途，資料儲存在本機瀏覽器。</div>
       </div>
       <div class="spacer"></div>
@@ -361,7 +323,14 @@
 
     function clearResult(){ resultBox.classList.remove('visible'); resultBox.innerHTML=''; }
     function showScoring(){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class="row"><div>AI 評分中…</div><div class="right muted">~1s</div></div>`; }
-    function showResult(score, mistakes){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div><div class="right muted">模擬</div></div>` + (mistakes.length? `<div style="margin-top:8px">重點練習：${mistakes.map(m=>`<span class='mistake'>${m}</span>`).join('')}</div>` : `<div class='muted' style='margin-top:8px'>做得好！</div>`); }
+    function showResult(score, mistakes){
+      resultBox.classList.add('visible');
+      resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div></div>`
+        + (mistakes.length
+          ? `<div class="mistake-wrap">重點練習：${mistakes.map(m=>`<span class='mistake'>${m}</span>`).join('')}</div>`
+          : `<div class='muted' style='margin-top:8px'>做得好！</div>`
+        );
+    }
 
     // （預留）真實 API
     async function evaluateReal(blob){ return null; }

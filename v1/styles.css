@@ -1,0 +1,15 @@
+/* Extracted styles from morningsir.html */
+.header-brand{font-size:18px}
+.header-sub{font-size:13px;opacity:.8}
+.card--pad{padding:16px}
+.h2--no-margin{margin:0 0 8px 0}
+.p--no-margin{margin:0}
+.row--mt{margin-top:14px}
+.course-title{font-weight:800}
+.row--mt-sm{margin-top:10px}
+.summary--card{padding:16px;margin-top:16px}
+.h3--no-margin{margin:0}
+.grid--two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.input-nick{display:block;width:100%;padding:12px;margin-top:6px;border-radius:10px;border:1px solid #e5e7eb}
+.mistake-wrap{margin-top:8px}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;box-shadow:0 10px 30px rgba(2,8,23,.08);z-index:99}
