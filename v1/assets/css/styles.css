@@ -70,12 +70,15 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 .summary{display:none} .summary.visible{display:block}
 .summary .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .kpi{padding:14px;border-radius:14px;background:rgba(255,255,255,var(--background-opacity));box-shadow:var(--shadow)}
-.tabbar{position:fixed;left:0;right:0;background:rgba(255,255,255,var(--background-opacity));border-top:1px solid #e5e7eb;display:flex;box-sizing:border-box;
+.tabbar{position:fixed;left:0;right:0;background:#ffffff;border-top:1px solid #e5e7eb;display:flex;box-sizing:border-box;
 	/* lift tabbar above the home indicator and remove bottom white gap */
 	bottom: env(safe-area-inset-bottom, 0px);
 	padding-bottom: env(safe-area-inset-bottom, 0px);
 	height: calc(64px + env(safe-area-inset-bottom, 0px));
+	z-index:30;
 }
+/* Ensure tab icons are fully opaque and sized consistently */
+.tab img{opacity:1;display:block;width:24px;height:auto;-webkit-filter:none;filter:none}
 .tab{flex:1;display:grid;place-items:center;color:#475569;font-size:12px;cursor:pointer}
 .tab.active{color:var(--brand);font-weight:700}
 .spacer{height:74px} .row{display:flex;gap:10px;align-items:center} .right{margin-left:auto} .muted{color:var(--muted)} .hidden{display:none}
