@@ -64,7 +64,7 @@
 
         <div id="result" class="result"></div>
         <div class="row row--mt-sm">
-          <button class="btn primary right" id="btnNext" disabled>下一張 →</button>
+          <button class="btn primary right" id="btnNext">下一張 →</button>
         </div>
 
         <div id="summary" class="summary card summary--card">
@@ -291,7 +291,7 @@
       const p = session.course.phrases[session.idx]; fcZh.textContent = p.zh; fcEn.textContent = p.en;
       chips.innerHTML = ''; (p.en.split(/\s+/).slice(0,4)).forEach(w=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=w.replace(/[^a-zA-Z']/g,''); chips.appendChild(s); });
       counter.textContent = `${session.idx+1}/${total}`; progressBar.style.width = `${((session.idx)/total)*100}%`;
-      clearResult(); disable([btnPlayback, btnScore, btnNext]);
+  clearResult(); disable([btnPlayback, btnScore]);
     }
 
     function endSession(){
