@@ -156,18 +156,59 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
     const COURSES = [
       {
         id: 'avseco', title: 'AVSECO 基礎', color:'#dbeafe', cover:'assets/img/cover-avseco.jpg',
-        phrases: [
-          { zh: '先生/女士，這是受限制物品。您可以聯絡航空公司協助、辦理物品收據，或選擇棄置。', en: 'Sir/Madam, this is a restricted article. You may choose to seek your airline\'s assistance or get a property receipt, or dispose of it.', audio: 'assets/audio/avseco1.mp3' },
-          { zh: '不好意思，先生/女士，這件物品屬於受限制物品，基於安全原因不能帶上飛機。', en: 'Excuse me, Sir/Madam. The item is a restricted article and for safety reasons cannot be taken on board the plane.', audio: 'assets/audio/avseco2.mp3' },
-          { zh: '請站在腳印上，跟隨指示，雙手張開。謝謝。', en: 'Please stand on this footprint, follow this sign and spread out your hands. Thank you.', audio: 'assets/audio/avseco3.mp3' },
-          { zh: '您好，先生/女士，請將所有隨身物品放入托盤，謝謝。', en: 'Hello, Sir/Madam. Please place all your belongings into the tray. Thank you.', audio: 'assets/audio/avseco4.mp3' },
-          { zh: '不好意思，先生/女士，我們需要隨機手檢。請把口袋內所有物品取出，放到這個黑色托盤。', en: 'Excuse me, Sir/Madam. This is a random hand search. Please take out all the items from your pockets and put them in this black tray.', audio: 'assets/audio/avseco5.mp3' },
-          { zh: '不好意思，先生/女士，您的護照沒有晶片。請到人工協助通道，這邊請。', en: "Sorry, Sir/Madam. Your passport doesn't have a chip. Let me direct you to the assisted channel right this way.", audio: 'assets/audio/avseco6.mp3' },
-          { zh: '攜帶小童的旅客可使用家庭通道。請按照指示前往人工協助通道。', en: 'For our younger travellers, we have a special family lane. Please follow the signs to the assisted channel.', audio: 'assets/audio/avseco7.mp3' },
-          { zh: '請向前一步／向後一步／站在腳印上，並看向攝像頭。', en: 'Please step forward / backward / stand on this footprint and look at the camera.', audio: 'assets/audio/avseco8.mp3' },
-          { zh: '通過海關後，機場快綫車站位於到達大堂的對面。', en: 'After passing through customs, the airport express station is located on the opposite side of the arrival hall.', audio: 'assets/audio/avseco9.mp3' },
-          { zh: '不好意思，先生/女士，您不能返回行李提取大堂。', en: 'Excuse me, Sir/ Madam, you are not allowed to return to the Baggage Reclaim Hall.', audio: 'assets/audio/avseco10.mp3' }
-        ]
+       phrases: [
+  {
+    zh: '先生/女士，這是受限制物品，請聯絡航空公司協助、辦理物品收據，或選擇棄置。',
+    en: "Sir/Madam, this is a restricted article, so please seek your airline’s assistance, obtain a property receipt, or dispose of it.",
+    audio: "assets/audio/avseco1.mp3"
+  },
+  {
+    zh: '不好意思，先生/女士，此物品屬於受限制物品，基於安全原因不能帶上飛機。',
+    en: "Excuse me, Sir/Madam, this item is a restricted article and, for safety reasons, cannot be taken on board the plane.",
+    audio: "assets/audio/avseco2.mp3"
+  },
+  {
+    zh: '請站在腳印上，按照指示，並把雙手張開，謝謝。',
+    en: "Please stand on the footprints, follow the sign, and spread out your hands. Thank you.",
+    audio: "assets/audio/avseco3.mp3"
+  },
+  {
+    zh: '您好，先生/女士，請將所有隨身物品放入托盤，謝謝。',
+    en: "Hello, Sir/Madam, please place all your belongings into the tray. Thank you.",
+    audio: "assets/audio/avseco4.mp3"
+  },
+  {
+    zh: '不好意思，先生/女士，這是隨機手檢，請把口袋內所有物品取出並放到這個黑色托盤。',
+    en: "Excuse me, Sir/Madam, this is a random hand search, so please take out all items from your pockets and put them in this black tray.",
+    audio: "assets/audio/avseco5.mp3"
+  },
+  {
+    zh: '不好意思，先生/女士，您的護照沒有晶片，請前往人工協助通道。',
+    en: "Sorry, Sir/Madam, your passport does not have a chip, so please proceed to the assisted channel.",
+    audio: "assets/audio/avseco6.mp3"
+  },
+  {
+    zh: '攜帶小童的旅客請使用家庭通道，並按照指示前往人工協助通道。',
+    en: "For families with young travelers, please use the family lane and follow the signs to the assisted channel.",
+    audio: "assets/audio/avseco7.mp3"
+  },
+  {
+    zh: '請向前一步或向後一步，然後站在腳印上並看向攝像頭。',
+    en: "Please step forward or step back, then stand on the footprints and look at the camera.",
+    audio: "assets/audio/avseco8.mp3"
+  },
+  {
+    zh: '通過海關後，機場快線車站位於到達大堂的對面。',
+    en: "After you pass customs, the Airport Express station is on the opposite side of the arrival hall.",
+    audio: "assets/audio/avseco9.mp3"
+  },
+  {
+    zh: '不好意思，先生/女士，您不能返回行李提取大堂。',
+    en: "Excuse me, Sir/Madam, you are not allowed to return to the baggage reclaim hall.",
+    audio: "assets/audio/avseco10.mp3"
+  }
+]
+
       }
     ];
 
@@ -189,6 +230,50 @@ function mimeToExt(t){
   if (/mp3/i.test(t)) return 'mp3';
   return null; // 其餘格式（webm/mp4/ogg）不送 eval.php（會回退 mock）
 }
+
+// === SOE per-word 解析參數 ===
+const SOE_BAD_ACC = 65;   // PronAccuracy < 65 視為待加強
+const SOE_MAX_TOKENS = 3; // 最多顯示 3 個重點詞
+
+// 依 SOE 結果挑詞；若沒有可用詞就退回隨機挑
+function deriveMistakesFromSoe(soeWords, fallbackWords) {
+  try {
+    const items = Array.isArray(soeWords) ? soeWords : [];
+    // 清洗：只取有 Word 與 PronAccuracy 的項目
+    const scored = items
+      .map(w => ({
+        w: String((w.Word ?? w.word ?? '')).replace(/[^A-Za-z']/g, ''),
+        acc: Number(w.PronAccuracy ?? w.pronAccuracy ?? NaN)
+      }))
+      .filter(x => x.w && !Number.isNaN(x.acc));
+
+    // 低準確度優先，其次字面順序
+    const bad = scored
+      .filter(x => x.acc < SOE_BAD_ACC)
+      .sort((a,b) => a.acc - b.acc)
+      .slice(0, SOE_MAX_TOKENS)
+      .map(x => x.w);
+
+    if (bad.length) return bad;
+
+    // 若都不差，挑可能的功能詞以外的詞作輕提醒（取 1–2 個）
+    const contentWords = (fallbackWords || [])
+      .map(w => w.replace(/[^A-Za-z']/g,''))
+      .filter(Boolean)
+      .filter(w => !/^(the|a|an|and|or|to|of|in|on|at|for|with|by|from)$/i.test(w));
+
+    if (contentWords.length) {
+      return contentWords.slice(0, Math.min(2, SOE_MAX_TOKENS));
+    }
+  } catch (_) {}
+
+  // 最後保底：沿用舊的隨機挑詞（若有）
+  if (typeof pickMistakes === 'function') {
+    return pickMistakes(fallbackWords || []);
+  }
+  return [];
+}
+
 
     // ====== 初始化 ======
     document.addEventListener('DOMContentLoaded', () => {
@@ -405,8 +490,9 @@ btnScore.addEventListener('click', async ()=>{
     if (!res.ok || !data.ok || !data.summary) throw new Error('eval failed');
 
     // 取回 SOE 建議分數與可用指標
-    const score = Math.round(Number(data.summary.SuggestedScore ?? data.summary.PronAccuracy ?? 0)) || 0;
-    const mistakes = pickMistakes(words); // 你也可改成 data.result.Response.Words 解析重點詞
+  const score = Math.round(Number(data.summary.SuggestedScore ?? data.summary.PronAccuracy ?? 0)) || 0;
+  const soeWords = (data.result && data.result.Response && data.result.Response.Words) || [];
+  const mistakes = deriveMistakesFromSoe(soeWords, words);
 
     showResult(score, mistakes);
     session.results[session.idx] = { score, mistakes, soi: data.summary };
