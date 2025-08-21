@@ -460,7 +460,7 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
     });
 
     // ====== 模擬評分 ======
-btnScore.addEventListener('click', async ()=>{
+  btnScore.addEventListener('click', async ()=>{
   const p = session.course.phrases[session.idx];
   const words = p.en.replace(/[^a-zA-Z'\s]/g,'').split(/\s+/).filter(Boolean);
 
@@ -494,13 +494,13 @@ btnScore.addEventListener('click', async ()=>{
   const soeWords = (data.result && data.result.Response && data.result.Response.Words) || [];
   const mistakes = deriveMistakesFromSoe(soeWords, words);
 
-    showResult(score, mistakes);
-    session.results[session.idx] = { score, mistakes, soi: data.summary };
+  showResult(score, mistakes, 'real');
+  session.results[session.idx] = { score, mistakes, soi: data.summary, source: 'real' };
     enable([btnNext, btnScore]);
   } catch (e) {
     // 任一錯誤 → 回退 mock，確保流程不中斷
-    await doMock();
-    enable([btnNext, btnScore]);
+  await doMock();
+  enable([btnNext, btnScore]);
   }
 
   async function doMock(){
@@ -509,8 +509,8 @@ btnScore.addEventListener('click', async ()=>{
     const score = Math.min(99, base + jitter);
     const mistakes = pickMistakes(words);
     await wait(600);
-    showResult(score, mistakes);
-    session.results[session.idx] = { score, mistakes, soi: null };
+    showResult(score, mistakes, 'simulated');
+    session.results[session.idx] = { score, mistakes, soi: null, source: 'simulated' };
   }
 });
 
@@ -541,9 +541,12 @@ btnScore.addEventListener('click', async ()=>{
 
     function clearResult(){ resultBox.classList.remove('visible'); resultBox.innerHTML=''; }
     function showScoring(){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class="row"><div>AI 評分中…</div><div class="right muted">~1s</div></div>`; }
-    function showResult(score, mistakes){
+    function showResult(score, mistakes, source){
       resultBox.classList.add('visible');
-      resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div></div>`
+      const badge = source === 'real'
+        ? `<span class="badge badge-real">真實</span>`
+        : `<span class="badge badge-simulated">模擬</span>`;
+      resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div><div class="result-badge">${badge}</div></div>`
         + (mistakes.length
           ? `<div class="mistake-wrap">重點練習：${mistakes.map(m=>`<span class='mistake'>${m}</span>`).join('')}</div>`
           : `<div class='muted' style='margin-top:8px'>做得好！</div>`

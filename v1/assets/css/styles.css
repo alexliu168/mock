@@ -70,6 +70,10 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .result{margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(241,245,249,var(--background-opacity));display:none}
 .result.visible{display:block} .score{font-weight:800}
+.result-badge{display:inline-flex;align-items:center;gap:8px;margin-left:12px}
+.badge{font-size:12px;padding:6px 8px;border-radius:999px;color:#fff;font-weight:700}
+.badge-real{background:#16a34a}
+.badge-simulated{background:#f97316}
 .mistake{display:inline-block;padding:6px 10px;border-radius:999px;background:#fee2e2;color:#991b1b;margin-right:8px;font-size:12px}
 .summary{display:none} .summary.visible{display:block}
 .summary .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
