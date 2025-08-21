@@ -1,7 +1,8 @@
 {
   "name": "Morning SIR!",
   "short_name": "MorningSIR",
-  "start_url": "./morningsir.html",
+  "start_url": "./morningsir.php",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#F8FAFC",
   "theme_color": "#0A66FF",
