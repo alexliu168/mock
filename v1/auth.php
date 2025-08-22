@@ -41,3 +41,4 @@ function require_login(){
   }
   return ['code'=>$code, 'label'=>$codes[$code]];
 }
+?>
