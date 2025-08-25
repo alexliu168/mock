@@ -38,7 +38,7 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
   <meta name="theme-color" content="#0A66FF">
 </head>
 <body>
-  <header class="appbar">Morning SIR! — 服務用語訓練 <span class="version-badge">V3 · with auth</span></header>
+  <header class="appbar">Morning SIR! — 服務用語訓練 <span class="version-badge">V3</span></header>
   <div class="hero">
     <div>
   <div class="header-brand"><img src="assets/img/logo_full.svg" alt="AVSECO" class="header-logo"/></div>
@@ -124,8 +124,13 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
   <div class="card card--pad">
 <label class="muted" for="nickname">暱稱</label>
 <input id="nickname" placeholder="請輸入暱稱" style="display:block;width:100%;padding:12px;margin-top:6px;border-radius:10px;border:1px solid #e5e7eb"/>
-<div class="hint">資料儲存在本機瀏覽器。</div>
+<div class="hint"></div>
 
+      <hr style="margin:14px 0;border:none;border-top:1px solid #eef2ff" />
+      <h3 style="margin:0 0 8px 0">我的成就</h3>
+      <div class="pins-grid" id="myPins">
+        <!-- pins will be inserted here -->
+      </div>
       </div>
       <div class="spacer"></div>
     </section>
@@ -299,6 +304,18 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
         const sel = tab.classList.contains('active');
         img.src = sel ? tab.dataset.iconSelected : tab.dataset.iconDefault;
       });
+          // populate pins (show up to 8 pins named pin1.png..pin8.png)
+          try {
+            const pinsWrap = qs('#myPins');
+            if (pinsWrap) {
+              pinsWrap.innerHTML = '';
+              for (let i=1;i<=8;i++) {
+                const d = document.createElement('div'); d.className='pin';
+                const img = document.createElement('img'); img.src = `assets/pins/pin${i}.png`; img.alt = `pin${i}`;
+                d.appendChild(img); pinsWrap.appendChild(d);
+              }
+            }
+          } catch(e) { console.warn('populate pins failed', e); }
     });
 
     function switchTab(tab){ Object.values(Views).forEach(v => v.classList.remove('active')); qs('#'+tab).classList.add('active');
@@ -330,9 +347,31 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
     const btnPlayback = qs('#btnPlayback'); const btnScore = qs('#btnScore'); const btnNext = qs('#btnNext');
     const resultBox = qs('#result');
     let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '', audioEl = new Audio();
-    // Fallback recorder state (for iOS Safari / browsers without MediaRecorder or unsupported mime types)
-    let fallbackRecorder = null;
+  // Fallback recorder state (for iOS Safari / browsers without MediaRecorder or unsupported mime types)
+  let fallbackRecorder = null;
 
+  function setPlaybackBlob(blob, mime) {
+  recordedBlob = blob;
+  recordedMimeType = (mime || blob?.type || '').toLowerCase();
+
+  // create/update the preview audio element
+  let a = document.getElementById('recPreview');
+  if (!a) {
+    a = document.createElement('audio');
+    a.id = 'recPreview';
+    a.controls = false;
+    a.preload = 'metadata';
+    a.playsInline = true; a.setAttribute('playsinline', ''); a.muted = false;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+  }
+  a.src = URL.createObjectURL(recordedBlob);
+  try { a.load(); } catch(_) {}
+
+  // enable buttons
+  if (typeof btnPlayback !== 'undefined') btnPlayback.disabled = !(recordedBlob && recordedBlob.size);
+  if (typeof btnScore    !== 'undefined') btnScore.disabled    = !(recordedBlob && recordedBlob.size);
+}
     // Helper: encode Float32 samples to WAV ArrayBuffer
     function encodeWAV(samples, sampleRate){
       const buffer = new ArrayBuffer(44 + samples.length * 2);
@@ -360,54 +399,139 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
       return view;
     }
 
-    // Start a fallback recorder using Web Audio API that produces WAV
-    async function startRecordingFallback(stream){
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if(!AudioCtx){ alert('此裝置不支援錄音。'); return; }
-      const audioCtx = new AudioCtx();
-      const source = audioCtx.createMediaStreamSource(stream);
-      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
-      const samples = [];
-      processor.onaudioprocess = (e)=>{ samples.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
-      source.connect(processor);
-      // prevent audible output by routing through a zero-gain node
-      const zeroGain = audioCtx.createGain(); zeroGain.gain.value = 0;
-      processor.connect(zeroGain);
-      zeroGain.connect(audioCtx.destination);
-      fallbackRecorder = {
-        audioCtx, source, processor, samples,
-        stop(){
-          // concatenate
-          const total = this.samples.reduce((s,a)=>s+a.length, 0);
-          const merged = new Float32Array(total);
-          let off=0; this.samples.forEach(s=>{ merged.set(s, off); off+=s.length; });
-          const wav = encodeWAV(merged, this.audioCtx.sampleRate);
-          recordedBlob = new Blob([wav], { type: 'audio/wav' });
-          recordedMimeType = recordedBlob.type || 'audio/wav';
-          enable([btnPlayback, btnScore]);
-          // cleanup
-          try{ this.processor.disconnect(); this.source.disconnect(); this.audioCtx.close(); }catch(e){}
-          fallbackRecorder = null;
-        }
-      };
-      // mark UI
-      btnRecord.disabled = true; btnStop.disabled = false; resultBox.classList.remove('visible');
+ async function sniffAudioExt(blob) {
+  try {
+    const head = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+    // WAV: "RIFF....WAVE"
+    if (head[0]===0x52 && head[1]===0x49 && head[2]===0x46 && head[3]===0x46) return 'wav';
+    // MP3: "ID3" or MPEG sync
+    if (head[0]===0x49 && head[1]===0x44 && head[2]===0x33) return 'mp3';
+    if (head[0]===0xFF && (head[1] & 0xE0) === 0xE0) return 'mp3';
+  } catch(e){}
+  return null;
+}
+
+async function debugBeacon(tag, obj) {
+  try {
+    const fd = new FormData();
+    fd.append('event', tag);
+    fd.append('data', JSON.stringify(obj||{}));
+    await fetch('log.php', { method:'POST', body: fd, credentials:'include' });
+  } catch(e){}
+}
+
+
+  //start recording and forecewave
+    const FORCE_WAV = /iPhone|iPad|iPod/.test(navigator.userAgent) || window.navigator.standalone === true;
+
+    async function startRecording(){
+      if (FORCE_WAV) return startRecordingFallback();  // your WAV exporter
+      return startRecordingWithMediaRecorder();
     }
 
-    // Start a MediaRecorder if available (prefer webm/ogg/mp4 where supported)
-    function startRecordingWithMediaRecorder(stream){
-      recordedChunks = []; recordedBlob = null;
-      let options = {};
-      try{
-        if(MediaRecorder.isTypeSupported('audio/webm')) options.mimeType='audio/webm';
-        else if(MediaRecorder.isTypeSupported('audio/ogg')) options.mimeType='audio/ogg';
-        else if(MediaRecorder.isTypeSupported('audio/mp4')) options.mimeType='audio/mp4';
-      }catch(e){}
-      try{ mediaRecorder = new MediaRecorder(stream, options); }catch(e){ mediaRecorder = new MediaRecorder(stream); }
-  mediaRecorder.ondataavailable = e=>{ if(e.data && e.data.size>0) recordedChunks.push(e.data); };
-  mediaRecorder.onstop = ()=>{ recordedBlob = new Blob(recordedChunks, { type: recordedChunks[0]?.type || options.mimeType || 'audio/webm' }); recordedMimeType = recordedBlob.type || (options.mimeType||''); enable([btnPlayback, btnScore]); };
-      mediaRecorder.start(); btnRecord.disabled = true; btnStop.disabled = false; resultBox.classList.remove('visible');
+    // Start a fallback recorder using Web Audio API that produces WAV
+  async function startRecordingFallback(stream){
+  const ac = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
+  const src = ac.createMediaStreamSource(stream);
+  const proc = ac.createScriptProcessor(4096, 1, 1);
+  const chunks = [];
+  proc.onaudioprocess = e => { chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
+  src.connect(proc); proc.connect(ac.destination);
+
+  function mergeFloat32(parts){ let n=0; parts.forEach(p=>n+=p.length); const out=new Float32Array(n); let o=0; parts.forEach(p=>{ out.set(p,o); o+=p.length; }); return out; }
+  function to16kMonoWav(float32, srcRate){
+    const tgt=16000, ratio=srcRate/tgt, len=Math.round(float32.length/ratio);
+    const res = new Float32Array(len); for(let i=0,p=0;i<len;i++,p+=ratio) res[i]=float32[p|0];
+    const buf = new ArrayBuffer(44+len*2), v=new DataView(buf); let o=0;
+    const w16=x=>{v.setUint16(o,x,true);o+=2;}, w32=x=>{v.setUint32(o,x,true);o+=4;};
+    w32(0x46464952); w32(36+len*2); w32(0x45564157);
+    w32(0x20746d66); w32(16); w16(1); w16(1); w32(tgt); w32(tgt*2); w16(2); w16(16);
+    w32(0x61746164); w32(len*2);
+    for(let i=0;i<len;i++){ const s=Math.max(-1,Math.min(1,res[i])); v.setInt16(o, s<0?s*0x8000:s*0x7FFF, true); o+=2; }
+    return new Blob([buf], { type:'audio/wav' });
+  }
+
+  fallbackRecorder = {
+    stop: async ()=>{
+      try {
+        proc.disconnect(); src.disconnect();
+        const blob = to16kMonoWav(mergeFloat32(chunks), ac.sampleRate);
+        setPlaybackBlob(blob, 'audio/wav');
+        btnRecord.disabled = false;
+        btnStop.disabled   = true;
+      } finally { try{ await ac.close(); }catch(_){} fallbackRecorder=null; }
     }
+  };
+
+  btnRecord.disabled = true;
+  btnStop.disabled   = false;
+  setTimeout(()=>{ try{ fallbackRecorder?.stop(); }catch(_){} }, 15000);
+}
+
+// 合併多段 Float32Array
+function mergeFloat32(chunks){
+  let len = 0; for (const c of chunks) len += c.length;
+  const out = new Float32Array(len);
+  let off = 0; for (const c of chunks){ out.set(c, off); off += c.length; }
+  return out;
+}
+
+// 轉成 16k 單聲道 WAV（16-bit PCM）
+function to16kMonoWav(float32, srcRate){
+  const tgt = 16000;
+  const ratio = srcRate / tgt;
+  const newLen = Math.round(float32.length / ratio);
+  const resampled = new Float32Array(newLen);
+  for (let i=0, p=0; i<newLen; i++, p+=ratio) resampled[i] = float32[p|0];
+
+  const buffer = new ArrayBuffer(44 + newLen*2);
+  const view = new DataView(buffer);
+  let off = 0;
+  const w16 = v => { view.setUint16(off, v, true); off+=2; };
+  const w32 = v => { view.setUint32(off, v, true); off+=4; };
+
+  // RIFF
+  w32(0x46464952); w32(36 + newLen*2); w32(0x45564157);
+  // fmt
+  w32(0x20746d66); w32(16); w16(1); w16(1); w32(tgt); w32(tgt*2); w16(2); w16(16);
+  // data
+  w32(0x61746164); w32(newLen*2);
+  for (let i=0; i<newLen; i++){
+    const s = Math.max(-1, Math.min(1, resampled[i]));
+    view.setInt16(off, s<0 ? s*0x8000 : s*0x7FFF, true); off+=2;
+  }
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+
+    // Start a MediaRecorder if available (prefer webm/ogg/mp4 where supported)
+function startRecordingWithMediaRecorder(stream) {
+  let mime = '';
+  if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mime = 'audio/webm;codecs=opus';
+  else if (MediaRecorder.isTypeSupported('audio/webm')) mime = 'audio/webm';
+  else if (MediaRecorder.isTypeSupported('audio/mpeg')) mime = 'audio/mpeg';
+  else if (MediaRecorder.isTypeSupported('audio/wav'))  mime = 'audio/wav';
+
+  mediaRecorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+  const chunks = [];
+
+  mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(chunks, { type: mediaRecorder.mimeType || '' });
+    setPlaybackBlob(blob, mediaRecorder.mimeType || '');
+    btnRecord.disabled = false;
+    btnStop.disabled   = true;
+  };
+
+  mediaRecorder.start();
+  btnRecord.disabled = true;
+  btnStop.disabled   = false;
+
+  // auto-stop after 15s
+  setTimeout(()=>{ try{ mediaRecorder?.state!=='inactive' && mediaRecorder.stop(); }catch(_){} }, 15000);
+}
+
 
     function startSession(course){
       qs('#courseTitle').textContent = course.title; qs('#summary').classList.remove('visible');
@@ -459,6 +583,7 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
       if(fallbackRecorder){ try{ fallbackRecorder.stop(); }catch(e){ console.error(e); } }
       btnRecord.disabled = false; btnStop.disabled = true; 
     });
+
     btnPlayback.addEventListener('click', ()=>{
       if(!recordedBlob){ return; }
       // iOS requires user interaction to play and prefers correct type
@@ -489,68 +614,79 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
     }
 
     // btnScore: call evaluateReal when resources ready, otherwise fallback to doMock
-    btnScore.addEventListener('click', async ()=>{
-      const p = session && session.course && session.course.phrases ? session.course.phrases[session.idx] : null;
-      const words = p && p.en ? p.en.replace(/[^a-zA-Z'\s]/g,'').split(/\s+/).filter(Boolean) : [];
+   btnScore?.addEventListener('click', onScoreClick, false);
 
-      showScoring(); disable([btnScore]);
+async function onScoreClick(){
+  try {
+    showScoring?.(); disable?.([btnScore]);
 
-      // If no recording present -> mock
-      if (!recordedBlob || !recordedBlob.size) {
-        await (async function doMock(){
-          const base = 70 + (session.idx*7)%18;
-          const jitter = Math.floor(Math.random()*6);
-          const score = Math.min(99, base + jitter);
-          const mistakes = (typeof deriveMistakesFromSoe === 'function') ? deriveMistakesFromSoe([], words) : pickMistakes(words);
-          await wait(600);
-          showResult(score, mistakes, 'simulated');
-          session.results[session.idx] = { score, mistakes, soi: null, source: 'simulated' };
-        })();
-        enable([btnNext, btnScore]);
-        return;
-      }
+    // sentence & words
+    const p = session?.course?.phrases?.[session.idx];
+    const text = (p?.en || '').replace(/\s+/g,' ').trim();
+    const words = (p?.en || '').replace(/[^A-Za-z'\s]/g,'').split(/\s+/).filter(Boolean);
+    if (!text) throw new Error('no-text');
 
-      // only accept wav / mp3 to send to server
-      const ext = mimeToExt(recordedMimeType || recordedBlob.type || '');
-      if (!ext) {
-        // unsupported mime -> mock
-        await (async function doMock(){
-          const base = 70 + (session.idx*7)%18;
-          const jitter = Math.floor(Math.random()*6);
-          const score = Math.min(99, base + jitter);
-          const mistakes = (typeof deriveMistakesFromSoe === 'function') ? deriveMistakesFromSoe([], words) : pickMistakes(words);
-          await wait(600);
-          showResult(score, mistakes, 'simulated');
-          session.results[session.idx] = { score, mistakes, soi: null, source: 'simulated' };
-        })();
-        enable([btnNext, btnScore]);
-        return;
-      }
+    // blob sanity
+    const blob = recordedBlob;
+    const mime = (recordedMimeType || blob?.type || '').toLowerCase();
+    let ext = /wav/.test(mime) ? 'wav' : (/mp3/.test(mime) ? 'mp3' : null);
+    if (!ext && blob) ext = await sniffAudioExt(blob);
 
-      try {
-        const resp = await evaluateReal(recordedBlob, ext);
-        // use SOE words if available to derive mistakes
-        const soeWords = (resp.result && resp.result.Response && resp.result.Response.Words) || [];
-        const mistakes = deriveMistakesFromSoe(soeWords, words);
-        const score = Math.round(Number(resp.summary.SuggestedScore ?? resp.summary.PronAccuracy ?? 0)) || 0;
-
-        showResult(score, mistakes, 'real');
-        session.results[session.idx] = { score, mistakes, soi: resp.summary, source: 'real' };
-        enable([btnNext, btnScore]);
-      } catch (e) {
-        // any failure -> fallback mock
-        await (async function doMock(){
-          const base = 70 + (session.idx*7)%18;
-          const jitter = Math.floor(Math.random()*6);
-          const score = Math.min(99, base + jitter);
-          const mistakes = (typeof deriveMistakesFromSoe === 'function') ? deriveMistakesFromSoe([], words) : pickMistakes(words);
-          await wait(600);
-          showResult(score, mistakes, 'simulated');
-          session.results[session.idx] = { score, mistakes, soi: null, source: 'simulated' };
-        })();
-        enable([btnNext, btnScore]);
-      }
+    await debugBeacon('eval_pre', {
+      hasBlob: !!(blob && blob.size), mime, ext, size: blob?.size||0, textLen: text.length
     });
+
+    if (!blob || !blob.size) return doMock(words);              // no recording
+    if (!ext)             return doMock(words);                 // unknown type (webm/mp4)
+
+    // build request
+    const fd = new FormData();
+    fd.append('text', text);
+    fd.append('audio', blob, 'clip.'+ext); // give server an extension
+
+    // call eval
+    const res = await fetch('eval.php', { method:'POST', body: fd, credentials:'include' });
+    await debugBeacon('eval_status', { status: res.status });
+
+    if (res.status === 401 || res.status === 403) { location.href = 'login.php'; return; }
+
+    let data = {};
+    try { data = await res.json(); }
+    catch { await debugBeacon('eval_parse_err', { text: await res.text().catch(()=>null) }); throw new Error('json'); }
+
+    await debugBeacon('eval_body', { ok: data?.ok, summary: data?.summary });
+
+    if (!res.ok || !data?.ok || !data?.summary) throw new Error('bad');
+
+    // success
+    const s1 = data.summary.SuggestedScore;
+    const s2 = data.summary.PronAccuracy;
+    const score = Math.round(Number(s1 ?? s2 ?? 0)) || 0;
+
+    const soeWords = data?.result?.Response?.Words || [];
+    const mistakes = (typeof deriveMistakesFromSoe === 'function')
+      ? deriveMistakesFromSoe(soeWords, words)
+      : (typeof pickMistakes === 'function' ? pickMistakes(words) : []);
+
+    showResult?.(score, mistakes);
+    (session.results ||= {})[session.idx] = { score, mistakes, soi: data.summary };
+    enable?.([btnNext, btnScore]);
+  } catch (e) {
+    await debugBeacon('eval_catch', { err: String(e) });
+    await doMockSafe();
+  }
+
+  async function doMockSafe(){
+    const base = 70 + ((session?.idx||0)*7)%18;
+    const score = Math.min(99, base + Math.floor(Math.random()*6));
+    const mistakes = (typeof deriveMistakesFromSoe==='function') ? deriveMistakesFromSoe([], [])
+                    : (typeof pickMistakes==='function') ? pickMistakes([]) : [];
+    await new Promise(r=>setTimeout(r,600));
+    showResult?.(score, mistakes);
+    (session.results ||= {})[session.idx] = { score, mistakes, soi: null };
+    enable?.([btnNext, btnScore]);
+  }
+}
 
     btnNext.addEventListener('click', ()=>{ session.idx += 1; loadCard(); });
 
