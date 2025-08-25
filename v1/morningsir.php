@@ -227,14 +227,8 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
       get stats(){ return JSON.parse(localStorage.getItem('ms_stats')||'{"sessions":0,"scores":[]}') },
       set stats(v){ localStorage.setItem('ms_stats', JSON.stringify(v)) }
     }
-const EVAL_URL = 'eval.php';
+const EVAL_URL = 'eval-sa.php';
 
-function mimeToExt(t){
-  if (!t) return null;
-  if (/wav/i.test(t)) return 'wav';
-  if (/mp3/i.test(t)) return 'mp3';
-  return null; // 其餘格式（webm/mp4/ogg）不送 eval.php（會回退 mock）
-}
 
 //for debug use only
 async function logEvent(event, data, msg) {
@@ -248,9 +242,7 @@ async function logEvent(event, data, msg) {
   } catch (e) { /* ignore */ }
 }
 
-// === SOE per-word 解析參數 ===
-const SOE_BAD_ACC = 65;   // PronAccuracy < 65 視為待加強
-const SOE_MAX_TOKENS = 3; // 最多顯示 3 個重點詞
+
 
 // 依 SOE 結果挑詞；若沒有可用詞就退回隨機挑
 function deriveMistakesFromSoe(soeWords, fallbackWords) {
@@ -345,7 +337,7 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
     const fcZh = qs('#fcZh'); const fcEn = qs('#fcEn'); const chips = qs('#chips');
     const btnPlay = qs('#btnPlay'); const btnRecord = qs('#btnRecord'); const btnStop = qs('#btnStop');
     const btnPlayback = qs('#btnPlayback'); const btnScore = qs('#btnScore'); const btnNext = qs('#btnNext');
-    const resultBox = qs('#result');
+  const resultBox = qs('#result');
     let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '', audioEl = new Audio();
   // Fallback recorder state (for iOS Safari / browsers without MediaRecorder or unsupported mime types)
   let fallbackRecorder = null;
@@ -373,40 +365,41 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
   if (typeof btnScore    !== 'undefined') btnScore.disabled    = !(recordedBlob && recordedBlob.size);
 }
     // Helper: encode Float32 samples to WAV ArrayBuffer
-    function encodeWAV(samples, sampleRate){
-      const buffer = new ArrayBuffer(44 + samples.length * 2);
-      const view = new DataView(buffer);
-      function writeString(offset, s){ for(let i=0;i<s.length;i++) view.setUint8(offset+i, s.charCodeAt(i)); }
-      writeString(0, 'RIFF');
-      view.setUint32(4, 36 + samples.length*2, true);
-      writeString(8, 'WAVE');
-      writeString(12, 'fmt ');
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true);
-      view.setUint16(22, 1, true);
-      view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * 2, true);
-      view.setUint16(32, 2, true);
-      view.setUint16(34, 16, true);
-      writeString(36, 'data');
-      view.setUint32(40, samples.length * 2, true);
-      let offset = 44;
-      for(let i=0;i<samples.length;i++){
-        const s = Math.max(-1, Math.min(1, samples[i]));
-        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-        offset += 2;
-      }
-      return view;
-    }
 
  async function sniffAudioExt(blob) {
   try {
-    const head = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+    const head = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
     // WAV: "RIFF....WAVE"
     if (head[0]===0x52 && head[1]===0x49 && head[2]===0x46 && head[3]===0x46) return 'wav';
     // MP3: "ID3" or MPEG sync
     if (head[0]===0x49 && head[1]===0x44 && head[2]===0x33) return 'mp3';
     if (head[0]===0xFF && (head[1] & 0xE0) === 0xE0) return 'mp3';
+    // M4A/MP4: "ftyp" in bytes 4-7, major brands: M4A, isom, mp42, etc.
+    if (head[4]===0x66 && head[5]===0x74 && head[6]===0x79 && head[7]===0x70) {
+      // Check for m4a/mp4 major brands
+      const brand = String.fromCharCode(head[8],head[9],head[10],head[11]).toLowerCase();
+      if (brand==='m4a '||brand==='mp4 '||brand==='isom'||brand==='mp42') return 'm4a';
+      return 'mp4';
+    }
+    // OGG: "OggS"
+    if (head[0]===0x4F && head[1]===0x67 && head[2]===0x67 && head[3]===0x53) return 'ogg';
+    // WEBM: "\x1A\x45\xDF\xA3"
+    if (head[0]===0x1A && head[1]===0x45 && head[2]===0xDF && head[3]===0xA3) return 'webm';
+    // FLAC: "fLaC"
+    if (head[0]===0x66 && head[1]===0x4C && head[2]===0x61 && head[3]===0x43) return 'flac';
+    // AIFF: "FORM"
+    if (head[0]===0x46 && head[1]===0x4F && head[2]===0x52 && head[3]===0x4D) return 'aiff';
+    // If blob has a type property, check mime type
+    if (blob.type) {
+      if (/wav/i.test(blob.type)) return 'wav';
+      if (/mp3/i.test(blob.type)) return 'mp3';
+      if (/m4a/i.test(blob.type)) return 'm4a';
+      if (/mp4/i.test(blob.type)) return 'mp4';
+      if (/ogg/i.test(blob.type)) return 'ogg';
+      if (/webm/i.test(blob.type)) return 'webm';
+      if (/flac/i.test(blob.type)) return 'flac';
+      if (/aiff/i.test(blob.type)) return 'aiff';
+    }
   } catch(e){}
   return null;
 }
@@ -422,114 +415,33 @@ async function debugBeacon(tag, obj) {
 
 
   //start recording and forecewave
-    const FORCE_WAV = /iPhone|iPad|iPod/.test(navigator.userAgent) || window.navigator.standalone === true;
 
-    async function startRecording(){
-      if (FORCE_WAV) return startRecordingFallback();  // your WAV exporter
-      return startRecordingWithMediaRecorder();
-    }
-
-    // Start a fallback recorder using Web Audio API that produces WAV
-  async function startRecordingFallback(stream){
-  const ac = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
-  const src = ac.createMediaStreamSource(stream);
-  const proc = ac.createScriptProcessor(4096, 1, 1);
-  const chunks = [];
-  proc.onaudioprocess = e => { chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
-  src.connect(proc); proc.connect(ac.destination);
-
-  function mergeFloat32(parts){ let n=0; parts.forEach(p=>n+=p.length); const out=new Float32Array(n); let o=0; parts.forEach(p=>{ out.set(p,o); o+=p.length; }); return out; }
-  function to16kMonoWav(float32, srcRate){
-    const tgt=16000, ratio=srcRate/tgt, len=Math.round(float32.length/ratio);
-    const res = new Float32Array(len); for(let i=0,p=0;i<len;i++,p+=ratio) res[i]=float32[p|0];
-    const buf = new ArrayBuffer(44+len*2), v=new DataView(buf); let o=0;
-    const w16=x=>{v.setUint16(o,x,true);o+=2;}, w32=x=>{v.setUint32(o,x,true);o+=4;};
-    w32(0x46464952); w32(36+len*2); w32(0x45564157);
-    w32(0x20746d66); w32(16); w16(1); w16(1); w32(tgt); w32(tgt*2); w16(2); w16(16);
-    w32(0x61746164); w32(len*2);
-    for(let i=0;i<len;i++){ const s=Math.max(-1,Math.min(1,res[i])); v.setInt16(o, s<0?s*0x8000:s*0x7FFF, true); o+=2; }
-    return new Blob([buf], { type:'audio/wav' });
+// Simplified: always use MediaRecorder with platform default format
+async function startRecording() {
+  if (!navigator.mediaDevices || !window.MediaRecorder) {
+    alert('此瀏覽器不支援錄音。');
+    return;
   }
-
-  fallbackRecorder = {
-    stop: async ()=>{
-      try {
-        proc.disconnect(); src.disconnect();
-        const blob = to16kMonoWav(mergeFloat32(chunks), ac.sampleRate);
-        setPlaybackBlob(blob, 'audio/wav');
-        btnRecord.disabled = false;
-        btnStop.disabled   = true;
-      } finally { try{ await ac.close(); }catch(_){} fallbackRecorder=null; }
-    }
-  };
-
-  btnRecord.disabled = true;
-  btnStop.disabled   = false;
-  setTimeout(()=>{ try{ fallbackRecorder?.stop(); }catch(_){} }, 15000);
-}
-
-// 合併多段 Float32Array
-function mergeFloat32(chunks){
-  let len = 0; for (const c of chunks) len += c.length;
-  const out = new Float32Array(len);
-  let off = 0; for (const c of chunks){ out.set(c, off); off += c.length; }
-  return out;
-}
-
-// 轉成 16k 單聲道 WAV（16-bit PCM）
-function to16kMonoWav(float32, srcRate){
-  const tgt = 16000;
-  const ratio = srcRate / tgt;
-  const newLen = Math.round(float32.length / ratio);
-  const resampled = new Float32Array(newLen);
-  for (let i=0, p=0; i<newLen; i++, p+=ratio) resampled[i] = float32[p|0];
-
-  const buffer = new ArrayBuffer(44 + newLen*2);
-  const view = new DataView(buffer);
-  let off = 0;
-  const w16 = v => { view.setUint16(off, v, true); off+=2; };
-  const w32 = v => { view.setUint32(off, v, true); off+=4; };
-
-  // RIFF
-  w32(0x46464952); w32(36 + newLen*2); w32(0x45564157);
-  // fmt
-  w32(0x20746d66); w32(16); w16(1); w16(1); w32(tgt); w32(tgt*2); w16(2); w16(16);
-  // data
-  w32(0x61746164); w32(newLen*2);
-  for (let i=0; i<newLen; i++){
-    const s = Math.max(-1, Math.min(1, resampled[i]));
-    view.setInt16(off, s<0 ? s*0x8000 : s*0x7FFF, true); off+=2;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream); // use default format
+    const chunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: mediaRecorder.mimeType || '' });
+      setPlaybackBlob(blob, mediaRecorder.mimeType || '');
+      btnRecord.disabled = false;
+      btnStop.disabled   = true;
+    };
+    mediaRecorder.start();
+    btnRecord.disabled = true;
+    btnStop.disabled   = false;
+    // auto-stop after 15s
+    setTimeout(()=>{ try{ mediaRecorder?.state!=='inactive' && mediaRecorder.stop(); }catch(_){} }, 15000);
+  } catch (err) {
+    alert('麥克風權限被拒或不可用。');
+    console.error(err);
   }
-  return new Blob([buffer], { type: 'audio/wav' });
-}
-
-
-    // Start a MediaRecorder if available (prefer webm/ogg/mp4 where supported)
-function startRecordingWithMediaRecorder(stream) {
-  let mime = '';
-  if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mime = 'audio/webm;codecs=opus';
-  else if (MediaRecorder.isTypeSupported('audio/webm')) mime = 'audio/webm';
-  else if (MediaRecorder.isTypeSupported('audio/mpeg')) mime = 'audio/mpeg';
-  else if (MediaRecorder.isTypeSupported('audio/wav'))  mime = 'audio/wav';
-
-  mediaRecorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
-  const chunks = [];
-
-  mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-
-  mediaRecorder.onstop = () => {
-    const blob = new Blob(chunks, { type: mediaRecorder.mimeType || '' });
-    setPlaybackBlob(blob, mediaRecorder.mimeType || '');
-    btnRecord.disabled = false;
-    btnStop.disabled   = true;
-  };
-
-  mediaRecorder.start();
-  btnRecord.disabled = true;
-  btnStop.disabled   = false;
-
-  // auto-stop after 15s
-  setTimeout(()=>{ try{ mediaRecorder?.state!=='inactive' && mediaRecorder.stop(); }catch(_){} }, 15000);
 }
 
 
@@ -563,21 +475,7 @@ function startRecordingWithMediaRecorder(stream) {
 
     // ====== 音訊控制 ======
     btnPlay.addEventListener('click', ()=>{ const p = session.course.phrases[session.idx]; audioEl.src = p.audio; audioEl.play(); });
-    btnRecord.addEventListener('click', async ()=>{
-      if(!navigator.mediaDevices){ alert('此瀏覽器不支援錄音。您仍可使用播放與模擬評分功能。'); return; }
-      try{ const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-        // prefer MediaRecorder when available and supports a common type
-        if(window.MediaRecorder){
-          try{
-            startRecordingWithMediaRecorder(stream);
-            return;
-          }catch(err){ console.warn('MediaRecorder failed, falling back to WAV recorder', err); }
-        }
-        // fallback for iOS Safari or older browsers
-        await startRecordingFallback(stream);
-        return;
-       }catch(err){ alert('麥克風權限被拒或不可用。'); console.error(err); }
-    });
+  btnRecord.addEventListener('click', startRecording);
     btnStop.addEventListener('click', ()=>{
       if(mediaRecorder && mediaRecorder.state!=='inactive'){ mediaRecorder.stop(); }
       if(fallbackRecorder){ try{ fallbackRecorder.stop(); }catch(e){ console.error(e); } }
@@ -596,24 +494,8 @@ function startRecordingWithMediaRecorder(stream) {
       });
     });
 
-    // ====== 模擬評分 ======
-    // Centralized real-eval function. Returns parsed JSON { ok, summary, result } or throws.
-    async function evaluateReal(blob, ext){
-      const p = session && session.course && session.course.phrases ? session.course.phrases[session.idx] : null;
-      const text = p && p.en ? String(p.en).replace(/\s+/g,' ').trim() : '';
-      const fd = new FormData();
-      fd.append('text', text);
-      // ensure filename uses proper extension
-      fd.append('audio', blob, `clip.${ext || (blob.type||'').split('/').pop()}`);
-
-      const res = await fetch(EVAL_URL, { method: 'POST', body: fd, credentials: 'include' });
-      if (res.status === 401 || res.status === 403) { location.href = 'login.php'; throw new Error('auth'); }
-      const data = await res.json().catch(()=> ({}));
-      if (!res.ok || !data || !data.ok || !data.summary) throw new Error('eval failed');
-      return { ok: true, summary: data.summary, result: data.result || null };
-    }
-
-    // btnScore: call evaluateReal when resources ready, otherwise fallback to doMock
+    // btnScore: call evaluateReal when resources ready, otherwise fallback to 
+    
    btnScore?.addEventListener('click', onScoreClick, false);
 
 async function onScoreClick(){
@@ -629,23 +511,35 @@ async function onScoreClick(){
     // blob sanity
     const blob = recordedBlob;
     const mime = (recordedMimeType || blob?.type || '').toLowerCase();
-    let ext = /wav/.test(mime) ? 'wav' : (/mp3/.test(mime) ? 'mp3' : null);
-    if (!ext && blob) ext = await sniffAudioExt(blob);
+    if (!blob || !blob.size) {
+      toast('請先錄音再評分');
+      enable?.([btnScore]);
+      return;
+    }
+
+    // pick an extension SpeechAce is happy with
+    let ext = await sniffAudioExt(blob);
+    if (!ext && mediaRecorder?.mimeType?.includes('/')) {
+      ext = mediaRecorder.mimeType.split('/')[1];
+    }
+    if (!ext) ext = 'webm';
 
     await debugBeacon('eval_pre', {
-      hasBlob: !!(blob && blob.size), mime, ext, size: blob?.size||0, textLen: text.length
+      hasBlob: !!(blob && blob.size), mime, size: blob?.size||0, textLen: text.length, ext
     });
-
-    if (!blob || !blob.size) return doMock(words);              // no recording
-    if (!ext)             return doMock(words);                 // unknown type (webm/mp4)
 
     // build request
     const fd = new FormData();
     fd.append('text', text);
-    fd.append('audio', blob, 'clip.'+ext); // give server an extension
+    fd.append('dialect', 'en-us');
+    fd.append('audio', blob, 'clip.'+ext);
+    fd.append('user_id', "alex");
+    fd.append('include_fluency', '1');
+    fd.append('include_intonation', '1');
 
-    // call eval
-    const res = await fetch('eval.php', { method:'POST', body: fd, credentials:'include' });
+
+    // call SpeechAce adapter
+    const res = await fetch(EVAL_URL, { method:'POST', body: fd, credentials:'include' });
     await debugBeacon('eval_status', { status: res.status });
 
     if (res.status === 401 || res.status === 403) { location.href = 'login.php'; return; }
@@ -654,39 +548,37 @@ async function onScoreClick(){
     try { data = await res.json(); }
     catch { await debugBeacon('eval_parse_err', { text: await res.text().catch(()=>null) }); throw new Error('json'); }
 
-    await debugBeacon('eval_body', { ok: data?.ok, summary: data?.summary });
+    // NEW contract
+    if (!res.ok || data?.status !== 'ok') throw new Error('bad');
 
-    if (!res.ok || !data?.ok || !data?.summary) throw new Error('bad');
+    // Score & mistakes from SpeechAce adapter
+    const score = Math.round(Number(data.overall ?? 0)) || 0;
+    const mistakes = Array.isArray(data.weak_words)
+      ? data.weak_words.slice(0, 3).map(w => w.word).filter(Boolean)
+      : [];
 
-    // success
-    const s1 = data.summary.SuggestedScore;
-    const s2 = data.summary.PronAccuracy;
-    const score = Math.round(Number(s1 ?? s2 ?? 0)) || 0;
+    showResult?.(score, mistakes, 'real');
 
-    const soeWords = data?.result?.Response?.Words || [];
-    const mistakes = (typeof deriveMistakesFromSoe === 'function')
-      ? deriveMistakesFromSoe(soeWords, words)
-      : (typeof pickMistakes === 'function' ? pickMistakes(words) : []);
+    // optional: show fluency
+    const flu = Number(data.fluency ?? NaN);
+    if (!Number.isNaN(flu)) {
+      resultBox.innerHTML += `<div class="muted" style="margin-top:6px">Fluency：${Math.round(flu)}</div>`;
+    }
 
-    showResult?.(score, mistakes);
-    (session.results ||= {})[session.idx] = { score, mistakes, soi: data.summary };
+    (session.results ||= {})[session.idx] = {
+      score,
+      mistakes,
+      sa: { overall: data.overall, fluency: data.fluency, meta: data.meta }
+    };
     enable?.([btnNext, btnScore]);
   } catch (e) {
     await debugBeacon('eval_catch', { err: String(e) });
-    await doMockSafe();
-  }
-
-  async function doMockSafe(){
-    const base = 70 + ((session?.idx||0)*7)%18;
-    const score = Math.min(99, base + Math.floor(Math.random()*6));
-    const mistakes = (typeof deriveMistakesFromSoe==='function') ? deriveMistakesFromSoe([], [])
-                    : (typeof pickMistakes==='function') ? pickMistakes([]) : [];
-    await new Promise(r=>setTimeout(r,600));
-    showResult?.(score, mistakes);
-    (session.results ||= {})[session.idx] = { score, mistakes, soi: null };
-    enable?.([btnNext, btnScore]);
+    toast('評分失敗，請重試');
+    enable?.([btnScore]);
   }
 }
+
+
 
     btnNext.addEventListener('click', ()=>{ session.idx += 1; loadCard(); });
 
