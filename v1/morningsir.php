@@ -338,31 +338,25 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
     const btnPlay = qs('#btnPlay'); const btnRecord = qs('#btnRecord'); const btnStop = qs('#btnStop');
     const btnPlayback = qs('#btnPlayback'); const btnScore = qs('#btnScore'); const btnNext = qs('#btnNext');
   const resultBox = qs('#result');
-    let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '', audioEl = new Audio();
+    let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '';
+// Use a single audio element for playback
+const audioEl = document.createElement('audio');
+audioEl.id = 'recPreview';
+audioEl.controls = false;
+audioEl.preload = 'metadata';
+audioEl.playsInline = true; audioEl.setAttribute('playsinline', ''); audioEl.muted = false;
+audioEl.style.display = 'none';
+document.body.appendChild(audioEl);
   // Fallback recorder state (for iOS Safari / browsers without MediaRecorder or unsupported mime types)
   let fallbackRecorder = null;
 
   function setPlaybackBlob(blob, mime) {
   recordedBlob = blob;
   recordedMimeType = (mime || blob?.type || '').toLowerCase();
-
-  // create/update the preview audio element
-  let a = document.getElementById('recPreview');
-  if (!a) {
-    a = document.createElement('audio');
-    a.id = 'recPreview';
-    a.controls = false;
-    a.preload = 'metadata';
-    a.playsInline = true; a.setAttribute('playsinline', ''); a.muted = false;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-  }
-  a.src = URL.createObjectURL(recordedBlob);
-  try { a.load(); } catch(_) {}
-
-  // enable buttons
-  if (typeof btnPlayback !== 'undefined') btnPlayback.disabled = !(recordedBlob && recordedBlob.size);
-  if (typeof btnScore    !== 'undefined') btnScore.disabled    = !(recordedBlob && recordedBlob.size);
+  audioEl.src = URL.createObjectURL(recordedBlob);
+  try { audioEl.load(); } catch(_) {}
+  btnPlayback.disabled = !(recordedBlob && recordedBlob.size);
+  btnScore.disabled = !(recordedBlob && recordedBlob.size);
 }
     // Helper: encode Float32 samples to WAV ArrayBuffer
 
@@ -432,7 +426,13 @@ async function startRecording() {
       setPlaybackBlob(blob, mediaRecorder.mimeType || '');
       btnRecord.disabled = false;
       btnStop.disabled   = true;
+      btnPlayback.disabled = !(blob && blob.size);
     };
+    // Reset playback state on new recording
+    recordedBlob = null;
+    recordedMimeType = '';
+    audioEl.src = '';
+    btnPlayback.disabled = true;
     mediaRecorder.start();
     btnRecord.disabled = true;
     btnStop.disabled   = false;
@@ -479,18 +479,16 @@ async function startRecording() {
     btnStop.addEventListener('click', ()=>{
       if(mediaRecorder && mediaRecorder.state!=='inactive'){ mediaRecorder.stop(); }
       if(fallbackRecorder){ try{ fallbackRecorder.stop(); }catch(e){ console.error(e); } }
-      btnRecord.disabled = false; btnStop.disabled = true; 
+      btnRecord.disabled = false; btnStop.disabled = true;
+      // Reset playback state after stop
+      btnPlayback.disabled = !(recordedBlob && recordedBlob.size);
     });
 
     btnPlayback.addEventListener('click', ()=>{
-      if(!recordedBlob){ return; }
-      // iOS requires user interaction to play and prefers correct type
-      const url = URL.createObjectURL(recordedBlob);
-      audioEl.src = url; audioEl.play().catch(err=>{
+      if(!recordedBlob || !recordedBlob.size){ return; }
+      audioEl.currentTime = 0;
+      audioEl.play().catch(err => {
         console.warn('Playback failed:', err);
-        // fallback: create a temporary audio element and attach to DOM to ensure play is allowed
-        const tmp = document.createElement('audio'); tmp.controls = true; tmp.src = url; document.body.appendChild(tmp);
-        tmp.play().catch(e=>console.error(e));
       });
     });
 
@@ -548,14 +546,17 @@ async function onScoreClick(){
     try { data = await res.json(); }
     catch { await debugBeacon('eval_parse_err', { text: await res.text().catch(()=>null) }); throw new Error('json'); }
 
+    await debugBeacon('eval_api_response', { response: data });
+
     // NEW contract
     if (!res.ok || data?.status !== 'ok') throw new Error('bad');
 
     // Score & mistakes from SpeechAce adapter
     const score = Math.round(Number(data.overall ?? 0)) || 0;
     const mistakes = Array.isArray(data.weak_words)
-      ? data.weak_words.slice(0, 3).map(w => w.word).filter(Boolean)
+      ? data.weak_words.map(w => w.word).filter(Boolean)
       : [];
+    await debugBeacon('eval_mistakes', { mistakes });
 
     showResult?.(score, mistakes, 'real');
 
@@ -607,16 +608,29 @@ async function onScoreClick(){
 
     function clearResult(){ resultBox.classList.remove('visible'); resultBox.innerHTML=''; }
     function showScoring(){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class="row"><div>AI 評分中…</div><div class="right muted">~1s</div></div>`; }
-    function showResult(score, mistakes, source){
+    function showResult(score, mistakes) {
       resultBox.classList.add('visible');
-      const badge = source === 'real'
-        ? `<span class="badge badge-real">真實</span>`
-        : `<span class="badge badge-simulated">模擬</span>`;
+      const badge = `<span class="badge badge-real">A.I. 分析結果</span>`;
       resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div><div class="result-badge">${badge}</div></div>`
         + (mistakes.length
-          ? `<div class="mistake-wrap">重點練習：${mistakes.map(m=>`<span class='mistake'>${m}</span>`).join('')}</div>`
+          ? `<div class="mistake-wrap">重點練習：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='點擊朗讀'>${m}</span>`).join('')}</div>`
           : `<div class='muted' style='margin-top:8px'>做得好！</div>`
         );
+
+      // Add TTS playback for each mistake pill
+      if (mistakes.length) {
+        const pills = resultBox.querySelectorAll('.mistake');
+        pills.forEach(pill => {
+          pill.addEventListener('click', () => {
+            const word = pill.textContent;
+            if (window.speechSynthesis) {
+              const utter = new window.SpeechSynthesisUtterance(word);
+              utter.lang = 'en-US';
+              window.speechSynthesis.speak(utter);
+            }
+          });
+        });
+      }
     }
 
   // （預留）真實 API — implemented above as evaluateReal(blob, ext)
