@@ -738,10 +738,10 @@ async function onScoreClick(){
               return `${ww}：${t}`;
             }).join('； ')}</div>`
         : '';
-      // Metrics: show all three (fluency first, then pronunciation, then overall)
+  // Metrics line: show 发音 first, then 流畅度 (总分 shown above)
   const metrics = [];
-      if (fluency != null) metrics.push(`流畅度：${fluency}`);
   if (pronunciation != null) metrics.push(`发音：${pronunciation}`);
+  if (fluency != null) metrics.push(`流畅度：${fluency}`);
   // Remove duplicated 总分 from the metrics line (already shown as the main score)
       const metricsHtml = metrics.length
         ? `<div class=\"muted\" style=\"margin-top:6px\">${metrics.join(' · ')}</div>`
