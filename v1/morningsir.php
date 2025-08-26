@@ -1,5 +1,9 @@
 <?php
 require __DIR__.'/auth.php';
+// Prevent stale caches serving old inline JS (e.g., references like doMock)
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 // logout
 if (isset($_GET['logout'])) {
