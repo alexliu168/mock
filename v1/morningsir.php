@@ -22,12 +22,12 @@ $user = ['code'=>$code, 'label'=>$codes[$code]];
 $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hans">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <base href="<?php echo htmlspecialchars($ABS_BASE, ENT_QUOTES, 'UTF-8'); ?>">
-  <title>Morning SIR! — 服務用語訓練 </title>
+  <title>Morning SIR! — 服务用语训练 </title>
   <link rel="stylesheet" href="assets/css/styles.css" />
   <!-- Progressive Web App / iOS Home Screen -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -38,30 +38,30 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
   <meta name="theme-color" content="#0A66FF">
 </head>
 <body>
-  <header class="appbar">Morning SIR! — 服務用語訓練 <span class="version-badge">V3</span></header>
+  <header class="appbar">Morning SIR! — 服务用语训练 <span class="version-badge">V3</span></header>
   <div class="hero">
     <div>
   <div class="header-brand"><img src="assets/img/logo_full.svg" alt="AVSECO" class="header-logo"/></div>
-  <div class="header-sub">針對旅客服務場景的英語用語練習</div>
+  <div class="header-sub">针对旅客服务场景的英语用语练习</div>
     </div>
   </div>
 
   <main id="views">
-    <!-- 主頁 -->
+  <!-- 主页 -->
     <section id="home" class="view panel active">
       <div class="card card--pad">
-        <h2 class="h2--no-margin">歡迎使用</h2>
-        <p class="muted p--no-margin">這是一個瀏覽器版本，使用預錄英語音檔與本地評分機制。大多數行動瀏覽器可錄音。</p>
+  <h2 class="h2--no-margin">欢迎使用</h2>
+  <p class="muted p--no-margin">这是一个浏览器版本，使用预录英语音频与本地评分机制。大多数移动浏览器可录音。</p>
         <div class="row row--mt">
-          <button class="btn secondary" onclick="switchTab('practice')">前往練習</button>
-          <button class="btn primary" onclick="alert('Morning SIR! H5 — 本地音檔與評分機制。')">關於本示範</button>
+          <button class="btn secondary" onclick="switchTab('practice')">前往练习</button>
+          <button class="btn primary" onclick="alert('Morning SIR! H5 — 本地音频与评分机制。')">关于本示范</button>
         </div>
       </div>
     </section>
 
-    <!-- 練習：課程列表 + 閃卡 -->
+  <!-- 练习：课程列表 + 闪卡 -->
     <section id="practice" class="view panel">
-      <h2>課程列表</h2>
+  <h2>课程列表</h2>
       <div id="courseList" class="list"></div>
 
       <div id="session" class="hidden">
@@ -75,29 +75,29 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
           <div class="zh" id="fcZh">—</div>
           <div class="en" id="fcEn">—</div>
           <div class="chips" id="chips"></div>
-          <div class="hint">向<b>左滑</b>＝已認識 • 向<b>右滑</b>＝加入多練</div>
+          <div class="hint">向<b>左滑</b>＝已认识 • 向<b>右滑</b>＝加入多练</div>
         </div>
 
         <div class="toolbar">
           <button class="btn secondary" id="btnPlay">▶︎ 播放</button>
-          <button class="btn secondary" id="btnRecord">● 錄音</button>
+          <button class="btn secondary" id="btnRecord">● 录音</button>
           <button class="btn secondary" id="btnStop" disabled>■ 停止</button>
           <button class="btn secondary" id="btnPlayback" disabled>🔁 回放</button>
-          <button class="btn success" id="btnScore" disabled>★ 評分</button>
+          <button class="btn success" id="btnScore" disabled>★ 评分</button>
         </div>
 
         <div id="result" class="result"></div>
         <div class="row row--mt-sm">
-          <button class="btn primary right" id="btnNext">下一張 →</button>
+          <button class="btn primary right" id="btnNext">下一张 →</button>
         </div>
 
         <div id="summary" class="summary card summary--card">
-          <h3 class="h3--no-margin">本次練習總結</h3>
+          <h3 class="h3--no-margin">本次练习总结</h3>
           <div class="grid">
-            <div class="kpi"><div class="muted">卡片數</div><div id="smCards" class="en">0</div></div>
+            <div class="kpi"><div class="muted">卡片数</div><div id="smCards" class="en">0</div></div>
             <div class="kpi"><div class="muted">平均分</div><div id="smAvg" class="en">—</div></div>
-            <div class="kpi"><div class="muted">需要多練</div><div id="smHard" class="en">0</div></div>
-            <div class="kpi"><div class="muted">已認識</div><div id="smEasy" class="en">0</div></div>
+            <div class="kpi"><div class="muted">需要多练</div><div id="smHard" class="en">0</div></div>
+            <div class="kpi"><div class="muted">已认识</div><div id="smEasy" class="en">0</div></div>
           </div>
         </div>
       </div>
@@ -105,25 +105,25 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
       <div class="spacer"></div>
     </section>
 
-    <!-- 報告 -->
+  <!-- 报告 -->
     <section id="reports" class="view panel">
-      <h2>報告（示範）</h2>
+  <h2>报告（示范）</h2>
   <div class="card card--pad">
-        <p class="muted">此頁僅展示您在本裝置上的簡單練習統計（示範）。</p>
+  <p class="muted">此页仅展示您在本设备上的简单练习统计（示范）。</p>
   <div class="grid grid--two">
-          <div class="kpi"><div class="muted">練習次數</div><div id="rSessions" class="en">0</div></div>
+          <div class="kpi"><div class="muted">练习次数</div><div id="rSessions" class="en">0</div></div>
           <div class="kpi"><div class="muted">平均分</div><div id="rAvg" class="en">—</div></div>
         </div>
       </div>
       <div class="spacer"></div>
     </section>
 
-    <!-- 我的 -->
+  <!-- 我的 -->
     <section id="profile" class="view panel">
-      <h2>我的</h2>
+  <h2>我的</h2>
   <div class="card card--pad">
-<label class="muted" for="nickname">暱稱</label>
-<input id="nickname" placeholder="請輸入暱稱" style="display:block;width:100%;padding:12px;margin-top:6px;border-radius:10px;border:1px solid #e5e7eb"/>
+<label class="muted" for="nickname">昵称</label>
+<input id="nickname" placeholder="请输入昵称" style="display:block;width:100%;padding:12px;margin-top:6px;border-radius:10px;border:1px solid #e5e7eb"/>
 <div class="hint"></div>
 
       <hr style="margin:14px 0;border:none;border-top:1px solid #eef2ff" />
@@ -136,19 +136,19 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
     </section>
   </main>
 
-  <!-- 底部導覽 -->
+  <!-- 底部导航 -->
   <nav class="tabbar">
     <div class="tab active" data-tab="home" data-icon-default="assets/tabbar/home.png" data-icon-selected="assets/tabbar/home_selected.png">
-      <img src="assets/tabbar/home_selected.png" alt="主頁">
-      <div class="tab-label">主頁</div>
+      <img src="assets/tabbar/home_selected.png" alt="主页">
+  <div class="tab-label">主页</div>
     </div>
     <div class="tab" data-tab="practice" data-icon-default="assets/tabbar/practice.png" data-icon-selected="assets/tabbar/practice_selected.png">
-      <img src="assets/tabbar/practice.png" alt="練習">
-      <div class="tab-label">練習</div>
+      <img src="assets/tabbar/practice.png" alt="练习">
+  <div class="tab-label">练习</div>
     </div>
     <div class="tab" data-tab="reports" data-icon-default="assets/tabbar/reports.png" data-icon-selected="assets/tabbar/reports_selected.png">
-      <img src="assets/tabbar/reports.png" alt="報告">
-      <div class="tab-label">報告</div>
+      <img src="assets/tabbar/reports.png" alt="报告">
+  <div class="tab-label">报告</div>
     </div>
     <div class="tab" data-tab="profile" data-icon-default="assets/tabbar/profile.png" data-icon-selected="assets/tabbar/profile_selected.png">
       <img src="assets/tabbar/profile.png" alt="我的">
@@ -160,55 +160,55 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
     // ====== 課程資料（包含 AVSECO 基礎 10 句） ======
     const COURSES = [
       {
-        id: 'avseco', title: 'AVSECO 基礎', color:'#dbeafe', cover:'assets/img/cover-avseco.jpg',
+  id: 'avseco', title: 'AVSECO 基础', color:'#dbeafe', cover:'assets/img/cover-avseco.jpg',
        phrases: [
   {
-    zh: '先生/女士，這是受限制物品，請聯絡航空公司協助、辦理物品收據，或選擇棄置。',
+  zh: '先生/女士，这是受限制物品，请联系航空公司协助、办理物品收据，或选择弃置。',
     en: "Sir/Madam, this is a restricted article, so please seek your airline’s assistance, obtain a property receipt, or dispose of it.",
     audio: "assets/audio/avseco1.mp3"
   },
   {
-    zh: '不好意思，先生/女士，此物品屬於受限制物品，基於安全原因不能帶上飛機。',
+  zh: '不好意思，先生/女士，此物品属于受限制物品，基于安全原因不能带上飞机。',
     en: "Excuse me, Sir/Madam, this item is a restricted article and, for safety reasons, cannot be taken on board the plane.",
     audio: "assets/audio/avseco2.mp3"
   },
   {
-    zh: '請站在腳印上，按照指示，並把雙手張開，謝謝。',
+  zh: '请站在脚印上，按照指示，并把双手张开，谢谢。',
     en: "Please stand on the footprints, follow the sign, and spread out your hands. Thank you.",
     audio: "assets/audio/avseco3.mp3"
   },
   {
-    zh: '您好，先生/女士，請將所有隨身物品放入托盤，謝謝。',
+  zh: '您好，先生/女士，请将所有随身物品放入托盘，谢谢。',
     en: "Hello, Sir/Madam, please place all your belongings into the tray. Thank you.",
     audio: "assets/audio/avseco4.mp3"
   },
   {
-    zh: '不好意思，先生/女士，這是隨機手檢，請把口袋內所有物品取出並放到這個黑色托盤。',
+  zh: '不好意思，先生/女士，这是随机手检，请把口袋内所有物品取出并放到这个黑色托盘。',
     en: "Excuse me, Sir/Madam, this is a random hand search, so please take out all items from your pockets and put them in this black tray.",
     audio: "assets/audio/avseco5.mp3"
   },
   {
-    zh: '不好意思，先生/女士，您的護照沒有晶片，請前往人工協助通道。',
+  zh: '不好意思，先生/女士，您的护照没有芯片，请前往人工协助通道。',
     en: "Sorry, Sir/Madam, your passport does not have a chip, so please proceed to the assisted channel.",
     audio: "assets/audio/avseco6.mp3"
   },
   {
-    zh: '攜帶小童的旅客請使用家庭通道，並按照指示前往人工協助通道。',
+  zh: '携带小童的旅客请使用家庭通道，并按照指示前往人工协助通道。',
     en: "For families with young travelers, please use the family lane and follow the signs to the assisted channel.",
     audio: "assets/audio/avseco7.mp3"
   },
   {
-    zh: '請向前一步或向後一步，然後站在腳印上並看向攝像頭。',
+  zh: '请向前一步或向后一步，然后站在脚印上并看向摄像头。',
     en: "Please step forward or step back, then stand on the footprints and look at the camera.",
     audio: "assets/audio/avseco8.mp3"
   },
   {
-    zh: '通過海關後，機場快線車站位於到達大堂的對面。',
+  zh: '通过海关后，机场快线车站位于到达大厅的对面。',
     en: "After you pass customs, the Airport Express station is on the opposite side of the arrival hall.",
     audio: "assets/audio/avseco9.mp3"
   },
   {
-    zh: '不好意思，先生/女士，您不能返回行李提取大堂。',
+  zh: '不好意思，先生/女士，您不能返回行李提取大厅。',
     en: "Excuse me, Sir/Madam, you are not allowed to return to the baggage reclaim hall.",
     audio: "assets/audio/avseco10.mp3"
   }
@@ -413,7 +413,7 @@ async function debugBeacon(tag, obj) {
 // Simplified: always use MediaRecorder with platform default format
 async function startRecording() {
   if (!navigator.mediaDevices || !window.MediaRecorder) {
-    alert('此瀏覽器不支援錄音。');
+  alert('此浏览器不支持录音。');
     return;
   }
   try {
@@ -439,7 +439,7 @@ async function startRecording() {
     // auto-stop after 15s
     setTimeout(()=>{ try{ mediaRecorder?.state!=='inactive' && mediaRecorder.stop(); }catch(_){} }, 15000);
   } catch (err) {
-    alert('麥克風權限被拒或不可用。');
+  alert('麦克风权限被拒或不可用。');
     console.error(err);
   }
 }
@@ -510,7 +510,7 @@ async function onScoreClick(){
     const blob = recordedBlob;
     const mime = (recordedMimeType || blob?.type || '').toLowerCase();
     if (!blob || !blob.size) {
-      toast('請先錄音再評分');
+  toast('请先录音再评分');
       enable?.([btnScore]);
       return;
     }
@@ -563,7 +563,7 @@ async function onScoreClick(){
     // optional: show fluency
     const flu = Number(data.fluency ?? NaN);
     if (!Number.isNaN(flu)) {
-      resultBox.innerHTML += `<div class=\"muted\" style=\"margin-top:6px\">流暢度：${Math.round(flu)}</div>`;
+  resultBox.innerHTML += `<div class=\"muted\" style=\"margin-top:6px\">流畅度：${Math.round(flu)}</div>`;
     }
 
     (session.results ||= {})[session.idx] = {
@@ -574,7 +574,7 @@ async function onScoreClick(){
     enable?.([btnNext, btnScore]);
   } catch (e) {
     await debugBeacon('eval_catch', { err: String(e) });
-    toast('評分失敗，請重試');
+  toast('评分失败，请重试');
     enable?.([btnScore]);
   }
 }
@@ -603,17 +603,17 @@ async function onScoreClick(){
       };
       card.addEventListener('transitionend', onEnd);
     });
-    function markHard(){ session.hard.add(session.idx); toast('已加入多練'); }
-    function markEasy(){ session.easy.add(session.idx); toast('已標記為已認識'); }
+  function markHard(){ session.hard.add(session.idx); toast('已加入多练'); }
+  function markEasy(){ session.easy.add(session.idx); toast('已标记为已认识'); }
 
     function clearResult(){ resultBox.classList.remove('visible'); resultBox.innerHTML=''; }
-    function showScoring(){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class="row"><div>AI 評分中…</div><div class="right muted">~1s</div></div>`; }
+  function showScoring(){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class=\"row\"><div>AI 评分中…</div><div class=\"right muted\">~1s</div></div>`; }
     function showResult(score, mistakes) {
       resultBox.classList.add('visible');
-      const badge = `<span class="badge badge-real">A.I. 分析結果</span>`;
+  const badge = `<span class=\"badge badge-real\">A.I. 分析结果</span>`;
       resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div><div class="result-badge">${badge}</div></div>`
         + (mistakes.length
-          ? `<div class="mistake-wrap">重點練習：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='點擊朗讀'>${m}</span>`).join('')}</div>`
+          ? `<div class=\"mistake-wrap\">重点练习：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='点击朗读'>${m}</span>`).join('')}</div>`
           : `<div class='muted' style='margin-top:8px'>做得好！</div>`
         );
 
@@ -669,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
     nick.value = window.SESSION_USER.name;
     nick.readOnly = true;   // stop edits
     nick.disabled = true;   // greys it out & blocks events
-    nick.title = '由系統設定（邀請碼名冊）';
+  nick.title = '由系统设置（邀请码名册）';
   }
 });
 </script>
