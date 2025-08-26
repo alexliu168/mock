@@ -118,35 +118,6 @@ $audioTmp  = $_FILES['audio']['tmp_name'];
 $audioName = $_FILES['audio']['name'];
 $audioType = $_FILES['audio']['type'] ?: 'application/octet-stream';
 
-// Optionally persist a copy of the uploaded audio file
-if ($save_audio) {
-  try {
-    $codeFolder = strtoupper($_SESSION['invite_code'] ?? '');
-    $dir = __DIR__ . '/uploads/' . ($codeFolder ?: '_anon') . '/audio';
-    if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
-    $ext = strtolower(pathinfo($audioName, PATHINFO_EXTENSION) ?: 'bin');
-    $safeUser = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $user_id ?: 'user');
-    $safePhrase = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $phrase_uid ?: 'phrase');
-    $tsfn = gmdate('Ymd\THis\Z');
-    $dest = $dir . '/' . $tsfn . '_' . $safeUser . '_' . $safePhrase . '.' . $ext;
-    $copied = @copy($audioTmp, $dest);
-    append_eval_server_log([
-      'status'     => $copied ? 'audio_saved' : 'audio_save_failed',
-      'user_id'    => $user_id,
-      'phrase_uid' => $phrase_uid,
-      'file'       => $dest,
-      'bytes'      => $copied ? (@filesize($dest) ?: null) : null,
-    ]);
-  } catch (\Throwable $e) {
-    append_eval_server_log([
-      'status'     => 'audio_save_error',
-      'user_id'    => $user_id,
-      'phrase_uid' => $phrase_uid,
-      'error'      => $e->getMessage(),
-    ]);
-  }
-}
-
 $postFields = [
   'text'            => $text,
   'user_audio_file' => new CURLFile($audioTmp, $audioType, $audioName),
@@ -191,6 +162,35 @@ append_eval_server_log([
 
 // Parse SA JSON
 $sa = json_decode($resp, true);
+// Defer optional audio save until after eval, so we can use request_id when available
+if ($save_audio) {
+  try {
+    $codeFolder = strtoupper($_SESSION['invite_code'] ?? '');
+    $dir = __DIR__ . '/uploads/' . ($codeFolder ?: '_anon') . '/audio';
+    if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
+    $ext = strtolower(pathinfo($audioName, PATHINFO_EXTENSION) ?: 'bin');
+    $reqId = (is_array($sa) && isset($sa['request_id']) && $sa['request_id']) ? preg_replace('/[^A-Za-z0-9_.-]+/', '_', $sa['request_id']) : null;
+    $safeOriginal = preg_replace('/[^A-Za-z0-9_.-]+/', '_', basename($audioName) ?: ('clip.' . $ext));
+    $filename = $reqId ? ($reqId . '.' . $ext) : $safeOriginal;
+    $dest = $dir . '/' . $filename;
+    $copied = @copy($audioTmp, $dest);
+    append_eval_server_log([
+      'status'     => $copied ? 'audio_saved' : 'audio_save_failed',
+      'user_id'    => $user_id,
+      'phrase_uid' => $phrase_uid,
+      'req_id'     => $reqId,
+      'file'       => $dest,
+      'bytes'      => $copied ? (@filesize($dest) ?: null) : null,
+    ]);
+  } catch (\Throwable $e) {
+    append_eval_server_log([
+      'status'     => 'audio_save_error',
+      'user_id'    => $user_id,
+      'phrase_uid' => $phrase_uid,
+      'error'      => $e->getMessage(),
+    ]);
+  }
+}
 if ($sa === null) {
   oops(502, 'Invalid response from SpeechAce', ['raw'=>$resp, 'http_code'=>$code]);
 }
