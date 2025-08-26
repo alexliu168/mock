@@ -609,11 +609,12 @@ async function onScoreClick(){
     const mistakes = weakWords.map(w => w.word);
     await debugBeacon('eval_mistakes', { mistakes, ...getEvalCtx() });
 
-    // compute fluency early and render first per new sequence
-    const flu = Number(data.fluency ?? NaN);
-    const fluencyRounded = Number.isNaN(flu) ? null : Math.round(flu);
+  // compute metrics early and render per sequence
+  const flu = Number(data.fluency ?? NaN);
+  const fluencyRounded = Number.isNaN(flu) ? null : Math.round(flu);
+  const pronunciation = score; // current adapter's overall is pronunciation
 
-    showResult?.(score, mistakes, weakWords, fluencyRounded);
+  showResult?.(score, mistakes, weakWords, fluencyRounded, pronunciation);
 
   // fluency now rendered inside showResult
 
@@ -724,7 +725,7 @@ async function onScoreClick(){
       } catch(_) { return '继续努力，加油！'; }
     }
 
-    function showResult(score, mistakes, weakWords, fluency) {
+  function showResult(score, mistakes, weakWords, fluency, pronunciation) {
       resultBox.classList.add('visible');
   const badge = `<span class=\"badge badge-real\">A.I. 分析结果</span>`;
       const pillsHtml = (mistakes && mistakes.length)
@@ -737,12 +738,17 @@ async function onScoreClick(){
               return `${ww}：${t}`;
             }).join('； ')}</div>`
         : '';
-      const fluHtml = (fluency != null)
-        ? `<div class=\"muted\" style=\"margin-top:6px\">流畅度：${fluency}</div>`
+      // Metrics: show all three (fluency first, then pronunciation, then overall)
+      const metrics = [];
+      if (fluency != null) metrics.push(`流畅度：${fluency}`);
+      if (typeof pronunciation === 'number') metrics.push(`发音：${pronunciation}`);
+      if (typeof score === 'number') metrics.push(`总分：${score}`);
+      const metricsHtml = metrics.length
+        ? `<div class=\"muted\" style=\"margin-top:6px\">${metrics.join(' · ')}</div>`
         : '';
 
       resultBox.innerHTML = `<div class=\"row\"><div class=\"score\">分數：${score}</div><div class=\"result-badge\">${badge}</div></div>`
-        + fluHtml
+        + metricsHtml
         + `<div class='muted' style='margin-top:8px'>${feedbackForScore(score)}</div>`
         + pillsHtml
         + tipsHtml;
