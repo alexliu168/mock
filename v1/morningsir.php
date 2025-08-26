@@ -531,7 +531,7 @@ async function onScoreClick(){
     fd.append('text', text);
     fd.append('dialect', 'en-us');
     fd.append('audio', blob, 'clip.'+ext);
-    fd.append('user_id', "alex");
+    fd.append('user_id', window.SESSION_USER.name);
     fd.append('include_fluency', '1');
     fd.append('include_intonation', '1');
 
@@ -563,7 +563,7 @@ async function onScoreClick(){
     // optional: show fluency
     const flu = Number(data.fluency ?? NaN);
     if (!Number.isNaN(flu)) {
-      resultBox.innerHTML += `<div class="muted" style="margin-top:6px">Fluency：${Math.round(flu)}</div>`;
+      resultBox.innerHTML += `<div class=\"muted\" style=\"margin-top:6px\">流暢度：${Math.round(flu)}</div>`;
     }
 
     (session.results ||= {})[session.idx] = {
