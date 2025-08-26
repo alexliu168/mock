@@ -171,7 +171,8 @@ $pte       = $ts['pte_score'] ?? [];
 $cefr      = $ts['cefr_score'] ?? [];
 $flu = $sa['fluency'] ?? []; // present if include_fluency=1
 
-$overall  = $speechace['pronunciation'] ?? null;
+$pron     = $speechace['pronunciation'] ?? null;
+$overall  = $speechace['overall'] ?? ($pron ?? null);
 $fluency  = $speechace['fluency'] ?? ($flu['overall_metrics']['speechace_score']['fluency'] ?? null);
 $ielts_pr = $ielts['pronunciation'] ?? null;
 $pte_pr   = $pte['pronunciation'] ?? null;
@@ -206,7 +207,8 @@ usort($weak_words, function($a,$b){ return $a['score'] <=> $b['score']; });
 
 // Build compact payload
 $out = [
-  'overall'    => $overall,
+  'overall'    => $overall,       // SA overall (not just pronunciation)
+  'pronunciation' => $pron,        // SA pronunciation component
   'fluency'    => $fluency,
   'ielts_pron' => $ielts_pr,
   'pte_pron'   => $pte_pr,

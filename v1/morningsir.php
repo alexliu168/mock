@@ -612,7 +612,7 @@ async function onScoreClick(){
   // compute metrics early and render per sequence
   const flu = Number(data.fluency ?? NaN);
   const fluencyRounded = Number.isNaN(flu) ? null : Math.round(flu);
-  const pronunciation = score; // current adapter's overall is pronunciation
+  const pronunciation = Number.isFinite(Number(data.pronunciation)) ? Math.round(Number(data.pronunciation)) : null;
 
   showResult?.(score, mistakes, weakWords, fluencyRounded, pronunciation);
 
@@ -741,7 +741,7 @@ async function onScoreClick(){
       // Metrics: show all three (fluency first, then pronunciation, then overall)
       const metrics = [];
       if (fluency != null) metrics.push(`流畅度：${fluency}`);
-      if (typeof pronunciation === 'number') metrics.push(`发音：${pronunciation}`);
+  if (pronunciation != null) metrics.push(`发音：${pronunciation}`);
       if (typeof score === 'number') metrics.push(`总分：${score}`);
       const metricsHtml = metrics.length
         ? `<div class=\"muted\" style=\"margin-top:6px\">${metrics.join(' · ')}</div>`
