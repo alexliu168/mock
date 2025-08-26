@@ -41,12 +41,36 @@ function out_json($data, $code = 200) {
   exit;
 }
 
+// --- server-side logging (one JSONL per invocation) ---
+function append_eval_server_log($entry) {
+  try {
+    // Use invite code folder when available, else _anon
+    $code = strtoupper($_SESSION['invite_code'] ?? '');
+    $dir = __DIR__ . '/uploads/' . ($code ?: '_anon') . '/logs';
+    if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
+    $file = $dir . '/server-eval.log';
+    $payload = array_merge(['ts' => date('c')], $entry);
+    @file_put_contents($file, json_encode($payload, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) . PHP_EOL, FILE_APPEND | LOCK_EX);
+  } catch (\Throwable $e) { /* ignore logging errors */ }
+}
+
 
 $SPEECHACE_KEY  = getenv('SPEECHACE_API_KEY') ?: (defined('SPEECHACE_API_KEY') ? SPEECHACE_API_KEY : '');
 $SPEECHACE_BASE = getenv('SPEECHACE_API_URL') ?: (defined('SPEECHACE_API_URL') ? SPEECHACE_API_URL : 'https://api2.speechace.com');
 $SPEECHACE_PATH = '/api/scoring/text/v9/json';
 
 function oops($code, $msg, $extra = []) {
+  // Log the failure with any context available (user_id, phrase_uid, and error)
+  $user_id   = trim($_POST['user_id'] ?? '');
+  $phrase_uid= trim($_POST['phrase_uid'] ?? '');
+  append_eval_server_log([
+    'status'      => 'error',
+    'http_code'   => $code,
+    'user_id'     => $user_id,
+    'phrase_uid'  => $phrase_uid,
+    'error'       => $msg,
+    'extra'       => $extra,
+  ]);
   http_response_code($code);
   echo json_encode(array_merge(['status'=>'error','message'=>$msg], $extra), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
   exit;
@@ -61,6 +85,7 @@ if (!$SPEECHACE_KEY) {
 if (empty($_FILES['audio']) || $_FILES['audio']['error'] !== UPLOAD_ERR_OK) {
   oops(400, 'Missing or invalid audio upload');
 }
+$phrase_uid = trim($_POST['phrase_uid'] ?? '');
 $text = trim($_POST['text'] ?? '');
 if ($text === '') {
   oops(400, 'Missing required field: text');
@@ -103,10 +128,26 @@ $resp = curl_exec($ch);
 if ($resp === false) {
   $err = curl_error($ch);
   curl_close($ch);
+  // Log curl failure
+  append_eval_server_log([
+    'status'      => 'curl_error',
+    'user_id'     => $user_id,
+    'phrase_uid'  => $phrase_uid,
+    'error'       => $err,
+  ]);
   oops(502, 'SpeechAce request failed', ['detail'=>$err]);
 }
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
+
+// Log full SpeechAce response (success or failure)
+append_eval_server_log([
+  'status'       => 'speechace_response',
+  'user_id'      => $user_id,
+  'phrase_uid'   => $phrase_uid,
+  'sa_http_code' => $code,
+  'sa_raw'       => $resp,
+]);
 
 // Parse SA JSON
 $sa = json_decode($resp, true);
