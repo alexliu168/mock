@@ -14,7 +14,8 @@ header('Content-Type: application/json; charset=utf-8');
 // 1) session + optional local env
 require __DIR__ . '/auth.php';
 
-// if (is_file(__DIR__ . '/setup-sa.php')) { require __DIR__ . '/setup-sa.php'; }
+// Optional per-environment config (define constants or setenv here)
+if (is_file(__DIR__ . '/setup-sa.php')) { require_once __DIR__ . '/setup-sa.php'; }
 
 
 // 2) health ping (no login required)
@@ -41,8 +42,8 @@ function out_json($data, $code = 200) {
 }
 
 
-$SPEECHACE_KEY  = getenv('SPEECHACE_API_KEY') ?: 'YOUR_SPEECHACE_KEY_HERE';
-$SPEECHACE_BASE = getenv('SPEECHACE_API_URL') ?: 'https://api2.speechace.com';
+$SPEECHACE_KEY  = getenv('SPEECHACE_API_KEY') ?: (defined('SPEECHACE_API_KEY') ? SPEECHACE_API_KEY : '');
+$SPEECHACE_BASE = getenv('SPEECHACE_API_URL') ?: (defined('SPEECHACE_API_URL') ? SPEECHACE_API_URL : 'https://api2.speechace.com');
 $SPEECHACE_PATH = '/api/scoring/text/v9/json';
 
 function oops($code, $msg, $extra = []) {
@@ -54,7 +55,7 @@ function oops($code, $msg, $extra = []) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   oops(405, 'Use POST multipart/form-data');
 }
-if (!$SPEECHACE_KEY || $SPEECHACE_KEY === 'YOUR_SPEECHACE_KEY_HERE') {
+if (!$SPEECHACE_KEY) {
   oops(500, 'SpeechAce API key not configured');
 }
 if (empty($_FILES['audio']) || $_FILES['audio']['error'] !== UPLOAD_ERR_OK) {

@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Audio editor temp or cache
+*.tmp
+*.bak
+
+# Local secrets/config
+v1/setup-sa.php
