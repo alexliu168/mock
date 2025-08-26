@@ -163,13 +163,13 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
   id: 'avseco', title: 'AVSECO 基础', color:'#dbeafe', cover:'assets/img/cover-avseco.jpg',
        phrases: [
   {
-  zh: '先生/女士，这是受限制物品，请联系航空公司协助、办理物品收据，或选择弃置。',
-    en: "Sir/Madam, this is a restricted article, so please seek your airline’s assistance, obtain a property receipt, or dispose of it.",
+  zh: '先生/女士，这是受限制物品，请联系航空公司协助，可领取收据或选择弃置。',
+    en: "Sir/Madam, this is a restricted item. Please contact your airline for assistance. You may obtain a receipt or choose to dispose of the item.",
     audio: "assets/audio/avseco1.mp3"
   },
   {
-  zh: '不好意思，先生/女士，此物品属于受限制物品，基于安全原因不能带上飞机。',
-    en: "Excuse me, Sir/Madam, this item is a restricted article and, for safety reasons, cannot be taken on board the plane.",
+  zh: '不好意思，先生/女士，此物品属于受限制物品，出于安全原因不能带上飞机。',
+    en: "Excuse me, Sir/Madam. This item is restricted. For safety reasons, it cannot be taken on board the aircraft",
     audio: "assets/audio/avseco2.mp3"
   },
   {
