@@ -609,13 +609,13 @@ async function onScoreClick(){
     const mistakes = weakWords.map(w => w.word);
     await debugBeacon('eval_mistakes', { mistakes, ...getEvalCtx() });
 
-    showResult?.(score, mistakes, weakWords);
-
-    // optional: show fluency
+    // compute fluency early and render first per new sequence
     const flu = Number(data.fluency ?? NaN);
-    if (!Number.isNaN(flu)) {
-  resultBox.innerHTML += `<div class=\"muted\" style=\"margin-top:6px\">流畅度：${Math.round(flu)}</div>`;
-    }
+    const fluencyRounded = Number.isNaN(flu) ? null : Math.round(flu);
+
+    showResult?.(score, mistakes, weakWords, fluencyRounded);
+
+  // fluency now rendered inside showResult
 
     (session.results ||= {})[session.idx] = {
       score,
@@ -724,22 +724,27 @@ async function onScoreClick(){
       } catch(_) { return '继续努力，加油！'; }
     }
 
-    function showResult(score, mistakes, weakWords) {
+    function showResult(score, mistakes, weakWords, fluency) {
       resultBox.classList.add('visible');
   const badge = `<span class=\"badge badge-real\">A.I. 分析结果</span>`;
       const pillsHtml = (mistakes && mistakes.length)
         ? `<div class=\"mistake-wrap\">重点练习：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='点击朗读'>${m}</span>`).join('')}</div>`
         : '';
-  const tipsHtml = (window.MS_SHOW_TIPS && Array.isArray(weakWords) && weakWords.length)
+      const tipsHtml = (window.MS_SHOW_TIPS && Array.isArray(weakWords) && weakWords.length)
         ? `<div class='muted' style='margin-top:4px'>提示：${weakWords.map(w=>{
               const t = (w.tip||'').replace(/[<>]/g,'');
               const ww = (w.word||'').replace(/[<>]/g,'');
               return `${ww}：${t}`;
             }).join('； ')}</div>`
         : '';
+      const fluHtml = (fluency != null)
+        ? `<div class=\"muted\" style=\"margin-top:6px\">流畅度：${fluency}</div>`
+        : '';
+
       resultBox.innerHTML = `<div class=\"row\"><div class=\"score\">分數：${score}</div><div class=\"result-badge\">${badge}</div></div>`
-        + pillsHtml
+        + fluHtml
         + `<div class='muted' style='margin-top:8px'>${feedbackForScore(score)}</div>`
+        + pillsHtml
         + tipsHtml;
 
       // Wire TTS for each weak-word pill using robust helper
