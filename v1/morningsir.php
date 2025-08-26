@@ -38,7 +38,7 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
   <meta name="theme-color" content="#0A66FF">
 </head>
 <body>
-  <header class="appbar">Morning SIR! — 服务用语训练 <span class="version-badge">V3</span></header>
+  <header class="appbar">Morning SIR! — 服务用语训练 <span class="version-badge">V4</span></header>
   <div class="hero">
     <div>
   <div class="header-brand"><img src="assets/img/logo_full.svg" alt="AVSECO" class="header-logo"/></div>
@@ -608,6 +608,49 @@ async function onScoreClick(){
 
     function clearResult(){ resultBox.classList.remove('visible'); resultBox.innerHTML=''; }
   function showScoring(){ resultBox.classList.add('visible'); resultBox.innerHTML = `<div class=\"row\"><div>AI 评分中…</div><div class=\"right muted\">~1s</div></div>`; }
+
+  // Robust TTS helper (iOS-friendly)
+  function speakWord(word, lang='en-US'){
+    try {
+      if (!('speechSynthesis' in window) || !word) return;
+      const u = new window.SpeechSynthesisUtterance(String(word));
+      u.lang = lang; u.rate = 0.95; u.pitch = 1.0; u.volume = 1.0;
+
+      const startSpeak = () => {
+        const voices = window.speechSynthesis.getVoices?.() || [];
+        const v = voices.find(v => (v.lang||'').toLowerCase().startsWith(lang.toLowerCase()));
+        if (v) u.voice = v;
+        try { window.speechSynthesis.cancel(); } catch(_) {}
+        // iOS quirk: nudge the engine
+        try { window.speechSynthesis.pause(); window.speechSynthesis.resume(); } catch(_) {}
+        window.speechSynthesis.speak(u);
+      };
+
+      if (!window.speechSynthesis.getVoices?.().length) {
+        window.speechSynthesis.addEventListener('voiceschanged', startSpeak, { once:true });
+        setTimeout(startSpeak, 400);
+      } else {
+        startSpeak();
+      }
+    } catch(e) {
+      try { debugBeacon?.('tts_error', { err:String(e) }); } catch(_){}
+    }
+  }
+
+  // Prime TTS once on first user interaction (helps iOS load voices)
+  (function primeTTSOnce(){
+    const prime = () => {
+      try {
+        window.speechSynthesis?.getVoices?.();
+        const u = new window.SpeechSynthesisUtterance(' ');
+        u.volume = 0; u.rate = 1; u.lang = 'en-US';
+        try { window.speechSynthesis.cancel(); } catch(_) {}
+        setTimeout(() => { try { window.speechSynthesis.speak(u); window.speechSynthesis.cancel(); } catch(_) {} }, 0);
+      } catch(_) {}
+    };
+    document.addEventListener('click', prime, { once:true, passive:true });
+    document.addEventListener('touchend', prime, { once:true, passive:true });
+  })();
     function showResult(score, mistakes) {
       resultBox.classList.add('visible');
   const badge = `<span class=\"badge badge-real\">A.I. 分析结果</span>`;
@@ -617,18 +660,17 @@ async function onScoreClick(){
           : `<div class='muted' style='margin-top:8px'>做得好！</div>`
         );
 
-      // Add TTS playback for each mistake pill
+      // Wire TTS for each weak-word pill using robust helper
       if (mistakes.length) {
         const pills = resultBox.querySelectorAll('.mistake');
         pills.forEach(pill => {
-          pill.addEventListener('click', () => {
-            const word = pill.textContent;
-            if (window.speechSynthesis) {
-              const utter = new window.SpeechSynthesisUtterance(word);
-              utter.lang = 'en-US';
-              window.speechSynthesis.speak(utter);
-            }
-          });
+          const clone = pill.cloneNode(true);
+          pill.replaceWith(clone);
+          clone.addEventListener('click', () => {
+            const word = (clone.textContent || '').trim();
+            try { debugBeacon?.('tts_click', { word }); } catch(_){}
+            speakWord(word, 'en-US');
+          }, false);
         });
       }
     }
