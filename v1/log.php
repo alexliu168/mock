@@ -72,6 +72,10 @@ if (isset($payload['data']) && is_array($payload['data'])) {
   if (array_key_exists('course_idx', $payload['data'])) {
     unset($payload['data']['course_idx']);
   }
+  // Strip course_id (phrase_uid is sufficient)
+  if (array_key_exists('course_id', $payload['data'])) {
+    unset($payload['data']['course_id']);
+  }
 }
 
 $file = $dir . '/client.log';

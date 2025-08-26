@@ -164,7 +164,7 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
     // ====== 課程資料（包含 AVSECO 基礎 10 句） ======
     const COURSES = [
       {
-  id: 'avseco', title: 'AVSECO 基础', color:'#dbeafe', cover:'assets/img/cover-avseco.jpg',
+  id: 'avseco_1', title: 'AVSECO 基础', color:'#dbeafe', cover:'assets/img/cover-avseco.jpg',
        phrases: [
   {
   zh: '先生/女士，这是受限制物品，请联系航空公司协助，可领取收据或选择弃置。',
@@ -417,9 +417,9 @@ function getEvalCtx() {
     const cid = session?.course?.id || '';
   const idx = Number(session?.idx ?? -1);
   const uid = cid ? `${cid}#${(idx+1)}` : '';
-  // Do not log course_idx; keep minimal identifiers.
-  return { course_id: cid, phrase_uid: uid };
-  } catch (_) { return { course_id:'', phrase_uid:'' }; }
+    // Keep minimal identifiers: only phrase_uid
+    return { phrase_uid: uid };
+  } catch (_) { return { phrase_uid:'' }; }
 }
 
 // Redact potentially sensitive text fields from SA responses
