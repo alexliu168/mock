@@ -17,6 +17,9 @@ require __DIR__ . '/auth.php';
 // Optional per-environment config (define constants or setenv here)
 if (is_file(__DIR__ . '/setup-sa.php')) { require_once __DIR__ . '/setup-sa.php'; }
 
+// In-PHP toggle for saving uploaded audio (set MS_SAVE_AUDIO in setup-sa.php)
+$SAVE_AUDIO_DEFAULT = (defined('MS_SAVE_AUDIO') && MS_SAVE_AUDIO) ? true : false;
+
 
 // 2) health ping (no login required)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ping'])) {
@@ -27,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ping'])) {
     'speechace_url'  => getenv('SPEECHACE_API_URL') ?: 'default',
     'curl_loaded'    => extension_loaded('curl'),
     'openssl_loaded' => extension_loaded('openssl'),
-    'save_audio_default' => (getenv('MS_SAVE_AUDIO') === '1'),
+  'save_audio_default' => $SAVE_AUDIO_DEFAULT,
     'php'            => PHP_VERSION,
     'upload_max'     => ini_get('upload_max_filesize'),
     'post_max'       => ini_get('post_max_size')
@@ -96,8 +99,8 @@ $user_id = trim($_POST['user_id'] ?? '');
 $include_fluency    = (($_POST['include_fluency'] ?? '') === '1') ? '1' : null;
 $include_intonation = (($_POST['include_intonation'] ?? '') === '1') ? '1' : null;
 $no_mc              = (($_POST['no_mc'] ?? '') === '1') ? '1' : null;
-// Optional: control whether to persist a copy of the uploaded audio on server
-$save_audio_default = (getenv('MS_SAVE_AUDIO') === '1') || (defined('MS_SAVE_AUDIO') && MS_SAVE_AUDIO);
+// Optional: control whether to persist a copy of the uploaded audio on server (in-PHP constant only)
+$save_audio_default = $SAVE_AUDIO_DEFAULT;
 $save_audio_override = $_POST['save_audio'] ?? null; // '1' or '0' to override per-request
 $save_audio = $save_audio_default;
 if ($save_audio_override === '1') { $save_audio = true; }
