@@ -568,6 +568,11 @@ async function onScoreClick(){
     fd.append('user_id', window.SESSION_USER.name);
     fd.append('include_fluency', '1');
     fd.append('include_intonation', '1');
+    // Include phrase_uid so server can associate the eval
+    try {
+      const ctx = getEvalCtx();
+      if (ctx && ctx.phrase_uid) fd.append('phrase_uid', ctx.phrase_uid);
+    } catch(_) {}
 
 
     // call SpeechAce adapter
