@@ -417,9 +417,8 @@ function getEvalCtx() {
     const cid = session?.course?.id || '';
     const idx = Number(session?.idx ?? -1);
     const uid = cid ? `${cid}#${(idx+1)}` : '';
-    const title = session?.course?.title || '';
-    return { course_id: cid, course_title: title, idx, phrase_uid: uid };
-  } catch (_) { return { course_id:'', course_title:'', idx:-1, phrase_uid:'' }; }
+    return { course_id: cid, course_idx: idx, phrase_uid: uid };
+  } catch (_) { return { course_id:'', course_idx:-1, phrase_uid:'' }; }
 }
 
 // Redact potentially sensitive text fields from SA responses

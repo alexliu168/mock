@@ -20,7 +20,6 @@ $payload = [
   'page'      => $_POST['page'] ?? ($_GET['page'] ?? ($_SERVER['REQUEST_URI'] ?? '')),
   'event'     => $_POST['event'] ?? ($_GET['event'] ?? ''),
   'msg'       => $_POST['msg'] ?? '',
-  'user_code' => $user['code'] ?? '',
   'user_name' => $user['label'] ?? ($user['code'] ?? ''),
   'data'      => null
 ];
@@ -57,6 +56,19 @@ $ev = $payload['event'] ?? '';
 if (is_string($ev) && strpos($ev, 'eval_') === 0) {
   if (isset($payload['data']) && is_array($payload['data'])) {
     $payload['data'] = redact_eval_array($payload['data']);
+  }
+}
+
+// Normalize data payload keys for analytics convenience
+if (isset($payload['data']) && is_array($payload['data'])) {
+  // Remove course_title if present
+  if (array_key_exists('course_title', $payload['data'])) {
+    unset($payload['data']['course_title']);
+  }
+  // Rename idx -> course_idx if present
+  if (array_key_exists('idx', $payload['data']) && !array_key_exists('course_idx', $payload['data'])) {
+    $payload['data']['course_idx'] = $payload['data']['idx'];
+    unset($payload['data']['idx']);
   }
 }
 
