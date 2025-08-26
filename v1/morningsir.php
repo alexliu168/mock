@@ -407,6 +407,35 @@ async function debugBeacon(tag, obj) {
   } catch(e){}
 }
 
+// Build eval context for logging
+function getEvalCtx() {
+  try {
+    const cid = session?.course?.id || '';
+    const idx = Number(session?.idx ?? -1);
+    const uid = cid ? `${cid}#${(idx+1)}` : '';
+    const title = session?.course?.title || '';
+    return { course_id: cid, course_title: title, idx, phrase_uid: uid };
+  } catch (_) { return { course_id:'', course_title:'', idx:-1, phrase_uid:'' }; }
+}
+
+// Redact potentially sensitive text fields from SA responses
+function redactEvalObject(obj){
+  try {
+    const clone = JSON.parse(JSON.stringify(obj||{}));
+    const stripKeys = new Set(['text','reference_text','ref_text','refText','referenceText']);
+    const walk = (v) => {
+      if (Array.isArray(v)) { v.forEach(walk); }
+      else if (v && typeof v === 'object') {
+        Object.keys(v).forEach(k => {
+          if (stripKeys.has(k)) delete v[k]; else walk(v[k]);
+        });
+      }
+    };
+    walk(clone);
+    return clone;
+  } catch(_) { return {}; }
+}
+
 
   //start recording and forecewave
 
@@ -523,7 +552,8 @@ async function onScoreClick(){
     if (!ext) ext = 'webm';
 
     await debugBeacon('eval_pre', {
-      hasBlob: !!(blob && blob.size), mime, size: blob?.size||0, textLen: text.length, ext
+  hasBlob: !!(blob && blob.size), mime, size: blob?.size||0, textLen: text.length, ext,
+  ...getEvalCtx()
     });
 
     // build request
@@ -538,15 +568,21 @@ async function onScoreClick(){
 
     // call SpeechAce adapter
     const res = await fetch(EVAL_URL, { method:'POST', body: fd, credentials:'include' });
-    await debugBeacon('eval_status', { status: res.status });
+  await debugBeacon('eval_status', { status: res.status, ...getEvalCtx() });
 
     if (res.status === 401 || res.status === 403) { location.href = 'login.php'; return; }
 
     let data = {};
     try { data = await res.json(); }
-    catch { await debugBeacon('eval_parse_err', { text: await res.text().catch(()=>null) }); throw new Error('json'); }
+    catch {
+      // avoid logging key named "text"; include context
+      await debugBeacon('eval_parse_err', { body: await res.text().catch(()=>null), ...getEvalCtx() });
+      throw new Error('json');
+    }
 
-    await debugBeacon('eval_api_response', { response: data });
+    // log sanitized API response
+    const redacted = redactEvalObject(data);
+    await debugBeacon('eval_api_response', { response: redacted, ...getEvalCtx() });
 
     // NEW contract
     if (!res.ok || data?.status !== 'ok') throw new Error('bad');
@@ -556,7 +592,7 @@ async function onScoreClick(){
     const mistakes = Array.isArray(data.weak_words)
       ? data.weak_words.map(w => w.word).filter(Boolean)
       : [];
-    await debugBeacon('eval_mistakes', { mistakes });
+  await debugBeacon('eval_mistakes', { mistakes, ...getEvalCtx() });
 
     showResult?.(score, mistakes, 'real');
 
@@ -571,9 +607,19 @@ async function onScoreClick(){
       mistakes,
       sa: { overall: data.overall, fluency: data.fluency, meta: data.meta }
     };
+
+    // one-line eval summary for analytics
+    await debugBeacon('eval_done', {
+      score,
+      fluency: Number(data.fluency ?? null),
+      overall: Number(data.overall ?? null),
+      mistakes,
+      response: redacted,
+      ...getEvalCtx()
+    });
     enable?.([btnNext, btnScore]);
   } catch (e) {
-    await debugBeacon('eval_catch', { err: String(e) });
+    await debugBeacon('eval_catch', { err: String(e), ...getEvalCtx() });
   toast('评分失败，请重试');
     enable?.([btnScore]);
   }

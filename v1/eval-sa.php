@@ -13,7 +13,9 @@ header('Content-Type: application/json; charset=utf-8');
 
 // 1) session + optional local env
 require __DIR__ . '/auth.php';
-if (is_file(__DIR__ . '/setup-sa.php')) { require __DIR__ . '/setup-sa.php'; }
+
+// if (is_file(__DIR__ . '/setup-sa.php')) { require __DIR__ . '/setup-sa.php'; }
+
 
 // 2) health ping (no login required)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ping'])) {
@@ -176,5 +178,7 @@ $out = [
     'req_id'  => $sa['request_id'] ?? null,
   ],
 ];
+
 $out['status'] = 'ok';
+
 echo json_encode($out, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);

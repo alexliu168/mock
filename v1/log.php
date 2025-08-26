@@ -8,13 +8,21 @@ header('Content-Type: application/json; charset=utf-8');
 $dir = __DIR__ . '/uploads/' . $user['code'] . '/logs';
 if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
 
+$ip = $_SERVER['HTTP_CF_CONNECTING_IP']
+  ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+  ?? $_SERVER['REMOTE_ADDR']
+  ?? '';
+
 $payload = [
-  'ts'   => date('c'),
-  'ua'   => $_SERVER['HTTP_USER_AGENT'] ?? '',
-  'page' => $_POST['page'] ?? ($_GET['page'] ?? ''),
-  'event'=> $_POST['event'] ?? ($_GET['event'] ?? ''),
-  'msg'  => $_POST['msg'] ?? '',
-  'data' => null
+  'ts'        => date('c'),
+  'ua'        => $_SERVER['HTTP_USER_AGENT'] ?? '',
+  'ip'        => $ip,
+  'page'      => $_POST['page'] ?? ($_GET['page'] ?? ($_SERVER['REQUEST_URI'] ?? '')),
+  'event'     => $_POST['event'] ?? ($_GET['event'] ?? ''),
+  'msg'       => $_POST['msg'] ?? '',
+  'user_code' => $user['code'] ?? '',
+  'user_name' => $user['label'] ?? ($user['code'] ?? ''),
+  'data'      => null
 ];
 
 // Support FormData (data as stringified JSON) or raw JSON body
@@ -27,6 +35,28 @@ if (isset($_POST['data'])) {
   if ($raw) {
     $dec = json_decode($raw, true);
     if (is_array($dec)) $payload = array_merge($payload, $dec);
+  }
+}
+
+// For eval_* events, recursively remove any fields named 'text' or variants to avoid logging full prompts
+function redact_eval_array($arr){
+  $strip = ['text','reference_text','ref_text','refText','referenceText'];
+  $walker = function(&$v) use (&$walker, $strip) {
+    if (is_array($v)) {
+      foreach ($v as $k => &$vv) {
+        if (in_array($k, $strip, true)) { unset($v[$k]); }
+        else { $walker($vv); }
+      }
+    }
+  };
+  $walker($arr);
+  return $arr;
+}
+
+$ev = $payload['event'] ?? '';
+if (is_string($ev) && strpos($ev, 'eval_') === 0) {
+  if (isset($payload['data']) && is_array($payload['data'])) {
+    $payload['data'] = redact_eval_array($payload['data']);
   }
 }
 

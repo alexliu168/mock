@@ -11,6 +11,14 @@ session_set_cookie_params([
 ]);
 ini_set('session.use_strict_mode', '1');
 session_start();
+
+// Run setup once per session (after login/session init)
+if (is_file(__DIR__ . '/setup-sa.php') && empty($_SESSION['setup_sa_done'])) {
+  require __DIR__ . '/setup-sa.php';
+  $_SESSION['setup_sa_done'] = 1;
+}
+
+
 // URL pieces for absolute <base> (works in Safari + Home Screen)
 $SCHEME  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $ORIGIN  = $SCHEME . '://' . $_SERVER['HTTP_HOST'];
