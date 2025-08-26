@@ -715,8 +715,9 @@ async function onScoreClick(){
       resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div><div class="result-badge">${badge}</div></div>`
         + (mistakes.length
           ? `<div class=\"mistake-wrap\">重点练习：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='点击朗读'>${m}</span>`).join('')}</div>`
-          : `<div class='muted' style='margin-top:8px'>${feedbackForScore(score)}</div>`
-        );
+          : ''
+        )
+        + `<div class='muted' style='margin-top:8px'>${feedbackForScore(score)}</div>`;
 
       // Wire TTS for each weak-word pill using robust helper
       if (mistakes.length) {
