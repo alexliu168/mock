@@ -697,13 +697,25 @@ async function onScoreClick(){
     document.addEventListener('click', prime, { once:true, passive:true });
     document.addEventListener('touchend', prime, { once:true, passive:true });
   })();
+    // Feedback message by score: from encouragement to compliment
+    function feedbackForScore(s){
+      try {
+        const n = Number(s) || 0;
+        if (n >= 90) return '太棒了！几乎完美！';
+        if (n >= 80) return '做得好！继续保持！';
+        if (n >= 70) return '不错！再注意一些细节。';
+        if (n >= 60) return '加油！多练几次会更好。';
+        return '别气馁，坚持练习会进步。';
+      } catch(_) { return '继续努力，加油！'; }
+    }
+
     function showResult(score, mistakes) {
       resultBox.classList.add('visible');
   const badge = `<span class=\"badge badge-real\">A.I. 分析结果</span>`;
       resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div><div class="result-badge">${badge}</div></div>`
         + (mistakes.length
           ? `<div class=\"mistake-wrap\">重点练习：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='点击朗读'>${m}</span>`).join('')}</div>`
-          : `<div class='muted' style='margin-top:8px'>做得好！</div>`
+          : `<div class='muted' style='margin-top:8px'>${feedbackForScore(score)}</div>`
         );
 
       // Wire TTS for each weak-word pill using robust helper
