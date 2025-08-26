@@ -17,8 +17,9 @@ require __DIR__ . '/auth.php';
 // Optional per-environment config (define constants or setenv here)
 if (is_file(__DIR__ . '/setup-sa.php')) { require_once __DIR__ . '/setup-sa.php'; }
 
-// In-PHP toggle for saving uploaded audio (set MS_SAVE_AUDIO in setup-sa.php)
-$SAVE_AUDIO_DEFAULT = (defined('MS_SAVE_AUDIO') && MS_SAVE_AUDIO) ? true : false;
+// In-file toggle for saving uploaded audio. Set to true to enable by default.
+// You can still override per-request via POST save_audio=1/0
+$SAVE_AUDIO_DEFAULT = false;
 
 
 // 2) health ping (no login required)
@@ -99,7 +100,7 @@ $user_id = trim($_POST['user_id'] ?? '');
 $include_fluency    = (($_POST['include_fluency'] ?? '') === '1') ? '1' : null;
 $include_intonation = (($_POST['include_intonation'] ?? '') === '1') ? '1' : null;
 $no_mc              = (($_POST['no_mc'] ?? '') === '1') ? '1' : null;
-// Optional: control whether to persist a copy of the uploaded audio on server (in-PHP constant only)
+// Optional: control whether to persist a copy of the uploaded audio on server (in-file variable only)
 $save_audio_default = $SAVE_AUDIO_DEFAULT;
 $save_audio_override = $_POST['save_audio'] ?? null; // '1' or '0' to override per-request
 $save_audio = $save_audio_default;
