@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ping'])) {
     'speechace_url'  => getenv('SPEECHACE_API_URL') ?: 'default',
     'curl_loaded'    => extension_loaded('curl'),
     'openssl_loaded' => extension_loaded('openssl'),
+  'save_audio_default' => (getenv('MS_SAVE_AUDIO') === '1'),
     'php'            => PHP_VERSION,
     'upload_max'     => ini_get('upload_max_filesize'),
     'post_max'       => ini_get('post_max_size')
@@ -95,6 +96,12 @@ $user_id = trim($_POST['user_id'] ?? '');
 $include_fluency    = (($_POST['include_fluency'] ?? '') === '1') ? '1' : null;
 $include_intonation = (($_POST['include_intonation'] ?? '') === '1') ? '1' : null;
 $no_mc              = (($_POST['no_mc'] ?? '') === '1') ? '1' : null;
+// Optional: control whether to persist a copy of the uploaded audio on server
+$save_audio_default = (getenv('MS_SAVE_AUDIO') === '1') || (defined('MS_SAVE_AUDIO') && MS_SAVE_AUDIO);
+$save_audio_override = $_POST['save_audio'] ?? null; // '1' or '0' to override per-request
+$save_audio = $save_audio_default;
+if ($save_audio_override === '1') { $save_audio = true; }
+if ($save_audio_override === '0') { $save_audio = false; }
 
 // Build endpoint
 $endpoint = rtrim($SPEECHACE_BASE, '/') . $SPEECHACE_PATH . '?' . http_build_query([
@@ -106,6 +113,35 @@ $endpoint = rtrim($SPEECHACE_BASE, '/') . $SPEECHACE_PATH . '?' . http_build_que
 $audioTmp  = $_FILES['audio']['tmp_name'];
 $audioName = $_FILES['audio']['name'];
 $audioType = $_FILES['audio']['type'] ?: 'application/octet-stream';
+
+// Optionally persist a copy of the uploaded audio file
+if ($save_audio) {
+  try {
+    $codeFolder = strtoupper($_SESSION['invite_code'] ?? '');
+    $dir = __DIR__ . '/uploads/' . ($codeFolder ?: '_anon') . '/audio';
+    if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
+    $ext = strtolower(pathinfo($audioName, PATHINFO_EXTENSION) ?: 'bin');
+    $safeUser = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $user_id ?: 'user');
+    $safePhrase = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $phrase_uid ?: 'phrase');
+    $tsfn = gmdate('Ymd\THis\Z');
+    $dest = $dir . '/' . $tsfn . '_' . $safeUser . '_' . $safePhrase . '.' . $ext;
+    $copied = @copy($audioTmp, $dest);
+    append_eval_server_log([
+      'status'     => $copied ? 'audio_saved' : 'audio_save_failed',
+      'user_id'    => $user_id,
+      'phrase_uid' => $phrase_uid,
+      'file'       => $dest,
+      'bytes'      => $copied ? (@filesize($dest) ?: null) : null,
+    ]);
+  } catch (\Throwable $e) {
+    append_eval_server_log([
+      'status'     => 'audio_save_error',
+      'user_id'    => $user_id,
+      'phrase_uid' => $phrase_uid,
+      'error'      => $e->getMessage(),
+    ]);
+  }
+}
 
 $postFields = [
   'text'            => $text,
