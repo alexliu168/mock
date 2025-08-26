@@ -232,6 +232,9 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
       set stats(v){ localStorage.setItem('ms_stats', JSON.stringify(v)) }
     }
 const EVAL_URL = 'eval-sa.php';
+// Global switch: show pronunciation tips (default OFF).
+// To enable at runtime: set window.MS_SHOW_TIPS = true in the console or before this script.
+window.MS_SHOW_TIPS = window.MS_SHOW_TIPS ?? false;
 
 
 //for debug use only
@@ -727,7 +730,7 @@ async function onScoreClick(){
       const pillsHtml = (mistakes && mistakes.length)
         ? `<div class=\"mistake-wrap\">重点练习：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='点击朗读'>${m}</span>`).join('')}</div>`
         : '';
-      const tipsHtml = (Array.isArray(weakWords) && weakWords.length)
+  const tipsHtml = (window.MS_SHOW_TIPS && Array.isArray(weakWords) && weakWords.length)
         ? `<div class='muted' style='margin-top:4px'>提示：${weakWords.map(w=>{
               const t = (w.tip||'').replace(/[<>]/g,'');
               const ww = (w.word||'').replace(/[<>]/g,'');
