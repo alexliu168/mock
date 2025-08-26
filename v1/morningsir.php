@@ -415,10 +415,11 @@ async function debugBeacon(tag, obj) {
 function getEvalCtx() {
   try {
     const cid = session?.course?.id || '';
-    const idx = Number(session?.idx ?? -1);
-    const uid = cid ? `${cid}#${(idx+1)}` : '';
-    return { course_id: cid, course_idx: idx, phrase_uid: uid };
-  } catch (_) { return { course_id:'', course_idx:-1, phrase_uid:'' }; }
+  const idx = Number(session?.idx ?? -1);
+  const uid = cid ? `${cid}#${(idx+1)}` : '';
+  // Do not log course_idx; keep minimal identifiers.
+  return { course_id: cid, phrase_uid: uid };
+  } catch (_) { return { course_id:'', phrase_uid:'' }; }
 }
 
 // Redact potentially sensitive text fields from SA responses

@@ -65,10 +65,12 @@ if (isset($payload['data']) && is_array($payload['data'])) {
   if (array_key_exists('course_title', $payload['data'])) {
     unset($payload['data']['course_title']);
   }
-  // Rename idx -> course_idx if present
-  if (array_key_exists('idx', $payload['data']) && !array_key_exists('course_idx', $payload['data'])) {
-    $payload['data']['course_idx'] = $payload['data']['idx'];
+  // Strip idx/course_idx (no longer needed)
+  if (array_key_exists('idx', $payload['data'])) {
     unset($payload['data']['idx']);
+  }
+  if (array_key_exists('course_idx', $payload['data'])) {
+    unset($payload['data']['course_idx']);
   }
 }
 
