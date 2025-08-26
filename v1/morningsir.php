@@ -598,12 +598,15 @@ async function onScoreClick(){
 
     // Score & mistakes from SpeechAce adapter
     const score = Math.round(Number(data.overall ?? 0)) || 0;
-    const mistakes = Array.isArray(data.weak_words)
-      ? data.weak_words.map(w => w.word).filter(Boolean)
+    const weakWords = Array.isArray(data.weak_words)
+      ? data.weak_words
+          .map(w => ({ word: String(w.word||'').trim(), tip: String(w.tip||'').trim(), score: Number(w.score||0) }))
+          .filter(x => x.word)
       : [];
-  await debugBeacon('eval_mistakes', { mistakes, ...getEvalCtx() });
+    const mistakes = weakWords.map(w => w.word);
+    await debugBeacon('eval_mistakes', { mistakes, ...getEvalCtx() });
 
-    showResult?.(score, mistakes, 'real');
+    showResult?.(score, mistakes, weakWords);
 
     // optional: show fluency
     const flu = Number(data.fluency ?? NaN);
@@ -718,15 +721,23 @@ async function onScoreClick(){
       } catch(_) { return '继续努力，加油！'; }
     }
 
-    function showResult(score, mistakes) {
+    function showResult(score, mistakes, weakWords) {
       resultBox.classList.add('visible');
   const badge = `<span class=\"badge badge-real\">A.I. 分析结果</span>`;
-      resultBox.innerHTML = `<div class="row"><div class="score">分數：${score}</div><div class="result-badge">${badge}</div></div>`
-        + (mistakes.length
-          ? `<div class=\"mistake-wrap\">重点练习：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='点击朗读'>${m}</span>`).join('')}</div>`
-          : ''
-        )
-        + `<div class='muted' style='margin-top:8px'>${feedbackForScore(score)}</div>`;
+      const pillsHtml = (mistakes && mistakes.length)
+        ? `<div class=\"mistake-wrap\">重点练习：${mistakes.map(m=>`<span class='mistake' tabindex='0' role='button' aria-label='点击朗读'>${m}</span>`).join('')}</div>`
+        : '';
+      const tipsHtml = (Array.isArray(weakWords) && weakWords.length)
+        ? `<div class='muted' style='margin-top:4px'>提示：${weakWords.map(w=>{
+              const t = (w.tip||'').replace(/[<>]/g,'');
+              const ww = (w.word||'').replace(/[<>]/g,'');
+              return `${ww}：${t}`;
+            }).join('； ')}</div>`
+        : '';
+      resultBox.innerHTML = `<div class=\"row\"><div class=\"score\">分數：${score}</div><div class=\"result-badge\">${badge}</div></div>`
+        + pillsHtml
+        + `<div class='muted' style='margin-top:8px'>${feedbackForScore(score)}</div>`
+        + tipsHtml;
 
       // Wire TTS for each weak-word pill using robust helper
       if (mistakes.length) {
