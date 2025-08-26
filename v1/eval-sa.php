@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ping'])) {
     'speechace_url'  => getenv('SPEECHACE_API_URL') ?: 'default',
     'curl_loaded'    => extension_loaded('curl'),
     'openssl_loaded' => extension_loaded('openssl'),
-  'save_audio_default' => (getenv('MS_SAVE_AUDIO') === '1'),
+    'save_audio_default' => (getenv('MS_SAVE_AUDIO') === '1'),
     'php'            => PHP_VERSION,
     'upload_max'     => ini_get('upload_max_filesize'),
     'post_max'       => ini_get('post_max_size')
