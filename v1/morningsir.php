@@ -42,7 +42,7 @@ $DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'U
   <meta name="theme-color" content="#0A66FF">
 </head>
 <body>
-  <header class="appbar">Morning SIR! — 服务用语训练 <span class="version-badge">V4</span></header>
+  <header class="appbar">Morning SIR! — 服务用语训练 <span class="version-badge">V6</span></header>
   <div class="hero">
     <div>
   <div class="header-brand"><img src="assets/img/logo_full.svg" alt="AVSECO" class="header-logo"/></div>
@@ -739,15 +739,15 @@ async function onScoreClick(){
             }).join('； ')}</div>`
         : '';
       // Metrics: show all three (fluency first, then pronunciation, then overall)
-      const metrics = [];
+  const metrics = [];
       if (fluency != null) metrics.push(`流畅度：${fluency}`);
   if (pronunciation != null) metrics.push(`发音：${pronunciation}`);
-      if (typeof score === 'number') metrics.push(`总分：${score}`);
+  // Remove duplicated 总分 from the metrics line (already shown as the main score)
       const metricsHtml = metrics.length
         ? `<div class=\"muted\" style=\"margin-top:6px\">${metrics.join(' · ')}</div>`
         : '';
 
-      resultBox.innerHTML = `<div class=\"row\"><div class=\"score\">分數：${score}</div><div class=\"result-badge\">${badge}</div></div>`
+  resultBox.innerHTML = `<div class=\"row\"><div class=\"score\">总分：${score}</div><div class=\"result-badge\">${badge}</div></div>`
         + metricsHtml
         + `<div class='muted' style='margin-top:8px'>${feedbackForScore(score)}</div>`
         + pillsHtml

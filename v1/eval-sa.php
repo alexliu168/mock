@@ -172,8 +172,23 @@ $cefr      = $ts['cefr_score'] ?? [];
 $flu = $sa['fluency'] ?? []; // present if include_fluency=1
 
 $pron     = $speechace['pronunciation'] ?? null;
-$overall  = $speechace['overall'] ?? ($pron ?? null);
 $fluency  = $speechace['fluency'] ?? ($flu['overall_metrics']['speechace_score']['fluency'] ?? null);
+// If still missing, try averaging segment-level fluency scores
+if (!is_numeric($fluency) && !empty($flu['segment_metrics_list']) && is_array($flu['segment_metrics_list'])) {
+  $vals = [];
+  foreach ($flu['segment_metrics_list'] as $seg) {
+    if (isset($seg['speechace_score']['fluency']) && is_numeric($seg['speechace_score']['fluency'])) {
+      $vals[] = (float)$seg['speechace_score']['fluency'];
+    }
+  }
+  if ($vals) {
+    $fluency = (int) round(array_sum($vals) / count($vals));
+  }
+}
+// Prefer SA overall when present; otherwise, if both pron and fluency exist, compute a simple average; else fall back to pron
+$overall  = $speechace['overall'] ?? (is_numeric($pron) && is_numeric($fluency)
+  ? (int) round(0.7 * (float)$pron + 0.3 * (float)$fluency)
+  : ($pron ?? null));
 $ielts_pr = $ielts['pronunciation'] ?? null;
 $pte_pr   = $pte['pronunciation'] ?? null;
 $cefr_pr  = $cefr['pronunciation'] ?? null;
