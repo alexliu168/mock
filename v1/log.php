@@ -1,11 +1,19 @@
 <?php
 // log.php — write client debug events to uploads/<CODE>/logs/client.log
 require __DIR__ . '/auth.php';
-$user = require_login();
+
+// Check if user is logged in, otherwise use anonymous
+$user_code = strtoupper($_SESSION['invite_code'] ?? '');
+$user_label = '';
+
+if ($user_code) {
+  $codes = load_codes(__DIR__ . '/invitecodes.txt');
+  $user_label = $codes[$user_code] ?? '';
+}
 
 header('Content-Type: application/json; charset=utf-8');
 
-$dir = __DIR__ . '/uploads/' . $user['code'] . '/logs';
+$dir = __DIR__ . '/uploads/' . ($user_code ?: '_anon') . '/logs';
 if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
 
 $ip = $_SERVER['HTTP_CF_CONNECTING_IP']
@@ -20,7 +28,7 @@ $payload = [
   'page'      => $_POST['page'] ?? ($_GET['page'] ?? ($_SERVER['REQUEST_URI'] ?? '')),
   'event'     => $_POST['event'] ?? ($_GET['event'] ?? ''),
   'msg'       => $_POST['msg'] ?? '',
-  'user_name' => $user['label'] ?? ($user['code'] ?? ''),
+  'user_name' => $user_label ?: ($user_code ?: 'anonymous'),
   'data'      => null
 ];
 

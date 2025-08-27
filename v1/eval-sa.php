@@ -21,23 +21,6 @@ if (is_file(__DIR__ . '/setup-sa.php')) { require_once __DIR__ . '/setup-sa.php'
 // You can still override per-request via POST save_audio=1/0
 $SAVE_AUDIO_DEFAULT = false;
 
-
-// 2) health ping (no login required)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ping'])) {
-  out_json([
-    'ok'             => true,
-    'session'        => isset($_SESSION['invite_code']),
-    'secrets'        => getenv('SPEECHACE_API_KEY') ? true : false,
-    'speechace_url'  => getenv('SPEECHACE_API_URL') ?: 'default',
-    'curl_loaded'    => extension_loaded('curl'),
-    'openssl_loaded' => extension_loaded('openssl'),
-  'save_audio_default' => $SAVE_AUDIO_DEFAULT,
-    'php'            => PHP_VERSION,
-    'upload_max'     => ini_get('upload_max_filesize'),
-    'post_max'       => ini_get('post_max_size')
-  ]);
-}
-
 // --- tiny JSON helper ---
 function out_json($data, $code = 200) {
   http_response_code($code);

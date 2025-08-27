@@ -1,3 +1,22 @@
+/* Profile divider styling */
+.profile-divider {
+	margin: 14px 0;
+	border: none;
+	border-top: 1px solid #eef2ff;
+}
+/* Nickname input styling */
+.nickname-input {
+	display: block;
+	width: 100%;
+	padding: 12px;
+	margin-top: 6px;
+	border-radius: 10px;
+	border: 1px solid #e5e7eb;
+}
+/* Achievement section heading margin */
+.h3-achievement {
+	margin: 0 0 8px 0;
+}
 /* Extracted styles from morningsir.html */
 .header-brand{font-size:18px}
 .header-sub{font-size:13px;opacity:.8}

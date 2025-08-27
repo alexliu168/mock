@@ -4,13 +4,11 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
-        
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open morningsir.html",
-            "file": "/Users/alexliu/WeChatProjects/mock/v1/morningsir.html"
+            "name": "Open mainapp.html",
+            "file": "/Users/alexliu/WeChatProjects/mock/v1/mainapp.html"
         }
     ]
 }
