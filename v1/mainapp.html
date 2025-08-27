@@ -317,7 +317,8 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
     const btnPlay = qs('#btnPlay'); const btnRecord = qs('#btnRecord'); const btnStop = qs('#btnStop');
     const btnPlayback = qs('#btnPlayback'); const btnScore = qs('#btnScore'); const btnNext = qs('#btnNext');
   const resultBox = qs('#result');
-    let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '';
+  let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '';
+  let recordedUrl = '';
 // Use a single audio element for playback
 const audioEl = document.createElement('audio');
 audioEl.id = 'recPreview';
@@ -330,13 +331,19 @@ document.body.appendChild(audioEl);
   let fallbackRecorder = null;
 
   function setPlaybackBlob(blob, mime) {
-  recordedBlob = blob;
-  recordedMimeType = (mime || blob?.type || '').toLowerCase();
-  audioEl.src = URL.createObjectURL(recordedBlob);
-  try { audioEl.load(); } catch(_) {}
-  btnPlayback.disabled = !(recordedBlob && recordedBlob.size);
-  btnScore.disabled = !(recordedBlob && recordedBlob.size);
-}
+    // Revoke old URL if present
+    try { if (recordedUrl) URL.revokeObjectURL(recordedUrl); } catch(_) {}
+    recordedBlob = blob;
+    recordedMimeType = (mime || blob?.type || '').toLowerCase();
+    recordedUrl = recordedBlob ? URL.createObjectURL(recordedBlob) : '';
+    audioEl.src = recordedUrl || '';
+    try { audioEl.load(); } catch(_) {}
+    const has = !!(recordedBlob && recordedBlob.size);
+    btnPlayback.disabled = !has;
+    btnScore.disabled = !has;
+    // reset toggle UI
+    updatePlaybackUi(false);
+  }
     // Helper: encode Float32 samples to WAV ArrayBuffer
 
  async function sniffAudioExt(blob) {
@@ -433,16 +440,21 @@ async function startRecording() {
       const blob = new Blob(chunks, { type: mediaRecorder.mimeType || '' });
       setPlaybackBlob(blob, mediaRecorder.mimeType || '');
       btnRecord.disabled = false;
+      btnRecord.textContent = '● 录音';
       btnStop.disabled   = true;
       btnPlayback.disabled = !(blob && blob.size);
     };
     // Reset playback state on new recording
     recordedBlob = null;
     recordedMimeType = '';
+    // Stop any ongoing playback and reset UI
+    try { audioEl.pause(); audioEl.currentTime = 0; } catch(_) {}
     audioEl.src = '';
+    updatePlaybackUi(false);
     btnPlayback.disabled = true;
     mediaRecorder.start();
     btnRecord.disabled = true;
+    btnRecord.textContent = '录音中…';
     btnStop.disabled   = false;
     // auto-stop after 15s
     setTimeout(()=>{ try{ mediaRecorder?.state!=='inactive' && mediaRecorder.stop(); }catch(_){} }, 15000);
@@ -482,7 +494,13 @@ async function startRecording() {
     function updateReports(){ const s = store.stats; qs('#rSessions').textContent = s.sessions; const avg = s.scores.length? Math.round(s.scores.reduce((a,b)=>a+b,0)/s.scores.length) : '—'; qs('#rAvg').textContent = avg; }
 
     // ====== 音訊控制 ======
-    btnPlay.addEventListener('click', ()=>{ const p = session.course.phrases[session.idx]; audioEl.src = p.audio; audioEl.play(); });
+    btnPlay.addEventListener('click', ()=>{
+      // Ensure playback toggle resets when playing reference audio
+      updatePlaybackUi(false);
+      const p = session.course.phrases[session.idx];
+      audioEl.src = p.audio;
+      audioEl.play().catch(()=>{});
+    });
   btnRecord.addEventListener('click', startRecording);
     btnStop.addEventListener('click', ()=>{
       if(mediaRecorder && mediaRecorder.state!=='inactive'){ mediaRecorder.stop(); }
@@ -490,14 +508,34 @@ async function startRecording() {
       btnRecord.disabled = false; btnStop.disabled = true;
       // Reset playback state after stop
       btnPlayback.disabled = !(recordedBlob && recordedBlob.size);
+      btnRecord.textContent = '● 录音';
     });
 
     btnPlayback.addEventListener('click', ()=>{
       if(!recordedBlob || !recordedBlob.size){ return; }
+      const isRecordedSource = !!recordedUrl && audioEl.src === recordedUrl;
+      // If already playing recorded audio, toggle to stop
+      if (isRecordedSource && !audioEl.paused) {
+        try { audioEl.pause(); audioEl.currentTime = 0; } catch(_) {}
+        updatePlaybackUi(false);
+        return;
+      }
+      // Switch to recorded source and play
+      if (!isRecordedSource) {
+        audioEl.src = recordedUrl;
+      }
       audioEl.currentTime = 0;
-      audioEl.play().catch(err => {
-        console.warn('Playback failed:', err);
-      });
+      audioEl.play()
+        .then(()=>{ updatePlaybackUi(true); })
+        .catch(err => { console.warn('Playback failed:', err); updatePlaybackUi(false); });
+    });
+
+    // Keep UI in sync with audio state (only when playing the recorded clip)
+    audioEl.addEventListener('ended', ()=>{
+      if (recordedUrl && audioEl.src === recordedUrl) updatePlaybackUi(false);
+    });
+    audioEl.addEventListener('pause', ()=>{
+      if (recordedUrl && audioEl.src === recordedUrl && audioEl.currentTime < (audioEl.duration||0)) updatePlaybackUi(false);
     });
 
     // btnScore: call evaluateReal when resources ready, otherwise fallback to 
@@ -750,6 +788,14 @@ async function onScoreClick(){
     function enable(btns){ btns.forEach(b=>b.disabled=false); }
     function toast(msg){ const t = document.createElement('div'); t.textContent = msg; t.style.position='fixed'; t.style.left='50%'; t.style.bottom='80px'; t.style.transform='translateX(-50%)'; t.style.background='#111827'; t.style.color='#fff'; t.style.padding='10px 14px'; t.style.borderRadius='999px'; t.style.boxShadow='var(--shadow)'; t.style.zIndex=99; document.body.appendChild(t); setTimeout(()=>{ t.remove(); }, 900); }
     function pickMistakes(words){ if(words.length<=2) return []; const copy=[...words]; const n = Math.random()<0.5?1:2; const out=[]; for(let i=0;i<n;i++){ const idx = Math.floor(Math.random()*copy.length); out.push(copy.splice(idx,1)[0]); } return out; }
+    // Toggle UI for playback button and disable conflicting controls while playing
+  function updatePlaybackUi(isPlaying){
+      try {
+    btnPlayback.textContent = isPlaying ? '停止' : '回放';
+        btnRecord.disabled = !!isPlaying;
+        btnPlay.disabled = !!isPlaying;
+      } catch(_) {}
+    }
 
     // 兼容舊版：某些版本會呼叫 wirePracticeControls()
     // 本檔已在內部綁好事件，這裡提供空函式避免報錯
