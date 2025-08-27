@@ -319,6 +319,11 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
   const resultBox = qs('#result');
   let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '';
   let recordedUrl = '';
+  // Recording timers/state for countdown
+  let recordAutoStopTimer = null;
+  let recordCountdownTimer = null;
+  const RECORD_MAX_MS = 15000;
+  let recordStartedAt = 0;
 // Use a single audio element for playback
 const audioEl = document.createElement('audio');
 audioEl.id = 'recPreview';
@@ -443,6 +448,8 @@ async function startRecording() {
       btnRecord.textContent = '● 录音';
       btnStop.disabled   = true;
       btnPlayback.disabled = !(blob && blob.size);
+      // Clear timers when recording ends
+      clearRecordTimers();
     };
     // Reset playback state on new recording
     recordedBlob = null;
@@ -454,13 +461,18 @@ async function startRecording() {
     btnPlayback.disabled = true;
     mediaRecorder.start();
     btnRecord.disabled = true;
-    btnRecord.textContent = '录音中…';
+    // Start countdown
+    recordStartedAt = Date.now();
+    updateRecordCountdownLabel();
+    recordCountdownTimer = setInterval(updateRecordCountdownLabel, 500);
     btnStop.disabled   = false;
     // auto-stop after 15s
-    setTimeout(()=>{ try{ mediaRecorder?.state!=='inactive' && mediaRecorder.stop(); }catch(_){} }, 15000);
+    recordAutoStopTimer = setTimeout(()=>{ try{ mediaRecorder?.state!=='inactive' && mediaRecorder.stop(); }catch(_){} }, RECORD_MAX_MS);
   } catch (err) {
   alert('麦克风权限被拒或不可用。');
     console.error(err);
+    // Reset label on failure
+    try { clearRecordTimers(); btnRecord.textContent = '● 录音'; btnRecord.disabled = false; btnStop.disabled = true; } catch(_){}
   }
 }
 
@@ -509,6 +521,7 @@ async function startRecording() {
       // Reset playback state after stop
       btnPlayback.disabled = !(recordedBlob && recordedBlob.size);
       btnRecord.textContent = '● 录音';
+  clearRecordTimers();
     });
 
     btnPlayback.addEventListener('click', ()=>{
@@ -795,6 +808,20 @@ async function onScoreClick(){
         btnRecord.disabled = !!isPlaying;
         btnPlay.disabled = !!isPlaying;
       } catch(_) {}
+    }
+    // Update the record button label with remaining seconds
+    function updateRecordCountdownLabel(){
+      try {
+        const elapsed = Math.max(0, Date.now() - recordStartedAt);
+        const remainMs = Math.max(0, RECORD_MAX_MS - elapsed);
+        const remainSec = Math.ceil(remainMs / 1000);
+        btnRecord.textContent = `录音中… ${remainSec}s`;
+      } catch(_) {}
+    }
+    // Clear timers safely
+    function clearRecordTimers(){
+      try { if (recordCountdownTimer) { clearInterval(recordCountdownTimer); recordCountdownTimer = null; } } catch(_) {}
+      try { if (recordAutoStopTimer) { clearTimeout(recordAutoStopTimer); recordAutoStopTimer = null; } } catch(_) {}
     }
 
     // 兼容舊版：某些版本會呼叫 wirePracticeControls()
