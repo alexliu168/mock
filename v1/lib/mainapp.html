@@ -709,66 +709,23 @@ async function onScoreClick(){
 
   showResult?.(score, mistakes, weakWords, fluencyRounded, pronunciation);
 
-  // Always offer a “详细解释” toggle; show placeholder if summary is unavailable
+  // Show detailed explanation inline when present; skip otherwise
   try {
     const htmlSummary = typeof data.summary_zh === 'string' ? data.summary_zh.trim() : '';
-
-    const wrap = document.createElement('div');
-    wrap.className = 'summary-zh-wrap';
-    wrap.style.marginTop = '10px';
-
-    const openLink = document.createElement('a');
-    openLink.href = '#';
-    openLink.textContent = '详细解释'; // Simplified Chinese label
-    openLink.style.textDecoration = 'underline';
-    openLink.style.color = '#2563eb';
-    openLink.style.cursor = 'pointer';
-
-    const panel = document.createElement('div');
-    panel.className = 'card summary-zh-panel';
-    panel.style.marginTop = '8px';
-    panel.style.display = 'none';
-
-    const row = document.createElement('div');
-    row.className = 'row';
-
-    const title = document.createElement('div');
-    title.className = 'muted';
-    title.textContent = '详细解释';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'btn secondary right';
-    closeBtn.textContent = '收起';
-
-    const content = document.createElement('div');
-    content.style.whiteSpace = htmlSummary ? 'normal' : 'pre-wrap';
-    content.style.marginTop = '6px';
     if (htmlSummary) {
-      content.innerHTML = htmlSummary;
-    } else {
-      content.innerHTML = '<div class=\"muted\">暂无详细解释</div>';
+      const wrap = document.createElement('div');
+      wrap.className = 'summary-zh-wrap';
+      wrap.style.marginTop = '10px';
+      const panel = document.createElement('div');
+      panel.className = 'card summary-zh-panel';
+      panel.style.marginTop = '8px';
+      const content = document.createElement('div');
+      content.style.marginTop = '6px';
+      content.innerHTML = htmlSummary; // trusted server HTML
+      panel.appendChild(content);
+      wrap.appendChild(panel);
+      resultBox.appendChild(wrap);
     }
-
-    row.appendChild(title);
-    row.appendChild(closeBtn);
-    panel.appendChild(row);
-    panel.appendChild(content);
-
-    openLink.addEventListener('click', (e)=>{
-      e.preventDefault();
-      panel.style.display = 'block';
-      openLink.style.display = 'none';
-      try { debugBeacon?.('summary_open', { ...getEvalCtx() }); } catch(_){}
-    }, false);
-    closeBtn.addEventListener('click', ()=>{
-      panel.style.display = 'none';
-      openLink.style.display = 'inline';
-      try { debugBeacon?.('summary_close', { ...getEvalCtx() }); } catch(_){}
-    }, false);
-
-    wrap.appendChild(openLink);
-    wrap.appendChild(panel);
-    resultBox.appendChild(wrap);
   } catch(_) {}
 
   // fluency now rendered inside showResult
