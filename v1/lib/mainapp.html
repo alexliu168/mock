@@ -740,10 +740,11 @@ async function onScoreClick(){
       closeBtn.className = 'btn secondary right';
       closeBtn.textContent = '收起';
 
-      const content = document.createElement('div');
-      content.style.whiteSpace = 'pre-wrap';
-      content.style.marginTop = '6px';
-      content.textContent = summary; // ensure plain text, no HTML injection
+  const content = document.createElement('div');
+  content.style.whiteSpace = 'normal';
+  content.style.marginTop = '6px';
+  // Render trusted HTML from server summarizer
+  content.innerHTML = summary;
 
       row.appendChild(title);
       row.appendChild(closeBtn);
