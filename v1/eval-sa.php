@@ -429,8 +429,8 @@ $user_id = trim($_POST['user_id'] ?? '');
 $include_fluency    = (($_POST['include_fluency'] ?? '') === '1') ? '1' : null;
 $include_intonation = (($_POST['include_intonation'] ?? '') === '1') ? '1' : null;
 $no_mc              = (($_POST['no_mc'] ?? '') === '1') ? '1' : null;
-// Optional: include a Simplified Chinese summary paragraph in the compact payload
-$include_summary    = (($_POST['include_summary'] ?? '') === '1');
+// Include a Simplified Chinese summary paragraph by default (can disable with include_summary=0)
+$include_summary    = (($_POST['include_summary'] ?? '1') === '1');
 // Optional: control whether to persist a copy of the uploaded audio on server (in-file variable only)
 $save_audio_default = $SAVE_AUDIO_DEFAULT;
 $save_audio_override = $_POST['save_audio'] ?? null; // '1' or '0' to override per-request
