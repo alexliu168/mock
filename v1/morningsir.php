@@ -115,7 +115,7 @@ include __DIR__ . '/mainapp.html';
 $html = ob_get_clean();
 
 // Inject session variables at the beginning of the first script tag
-$sessionScript = "<script>\n    // Session variables from PHP\n    window.SESSION_USER = " . json_encode($user) . ";\n    window.DISPLAY_NAME = " . json_encode($DISPLAY_NAME) . ";\n    ";
+$sessionScript = "<script>\n    // Global debug switch (default OFF)\n    window.MS_DEBUG = (typeof window.MS_DEBUG === 'boolean') ? window.MS_DEBUG : false;\n    // Session variables from PHP\n    window.SESSION_USER = " . json_encode($user) . ";\n    window.DISPLAY_NAME = " . json_encode($DISPLAY_NAME) . ";\n    ";
 $html = preg_replace('/<script>/', $sessionScript, $html, 1);
 
 echo $html;
