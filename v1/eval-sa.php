@@ -37,7 +37,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (empty($_SESSION['invite_code'])) { header('Location: morningsir.php'); exit; }
 
 // Optional per-environment config (define constants or setenv here)
-if (is_file(__DIR__ . '/setup-sa.php')) { require_once __DIR__ . '/setup-sa.php'; }
+if (is_file(__DIR__ . '/lib/setup-sa.php')) { require_once __DIR__ . '/lib/setup-sa.php'; }
 
 // In-file toggle for saving uploaded audio. Set to true to enable by default.
 // You can still override per-request via POST save_audio=1/0

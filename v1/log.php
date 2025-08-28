@@ -20,7 +20,7 @@ function ms_load_codes($path){
   return $o;
 }
 if ($user_code) {
-  $codes = ms_load_codes(__DIR__ . '/invitecodes.txt');
+  $codes = ms_load_codes(__DIR__ . '/lib/invitecodes.txt');
   $user_label = $codes[$user_code] ?? '';
 }
 

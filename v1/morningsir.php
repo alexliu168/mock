@@ -1,6 +1,6 @@
 <?php
 // Authentication logic (moved from auth.php)
-$CODES_FILE = __DIR__ . '/invitecodes.txt';
+$CODES_FILE = __DIR__ . '/lib/invitecodes.txt';
 
 session_set_cookie_params([
   'lifetime' => 60*60*24*14,      // 14 days
@@ -111,7 +111,7 @@ $DISPLAY_NAME = htmlspecialchars(($user['name'] ?: $user['code']), ENT_QUOTES, '
 
 // Include the HTML content with session variables injected
 ob_start();
-include __DIR__ . '/mainapp.html';
+include __DIR__ . '/lib/mainapp.html';
 $html = ob_get_clean();
 
 // Inject session variables at the beginning of the first script tag

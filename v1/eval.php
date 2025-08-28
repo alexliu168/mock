@@ -40,7 +40,7 @@ $user = null;
   // Optional: map label
   $label = '';
   $codes = [];
-  $codesFile = __DIR__ . '/invitecodes.txt';
+  $codesFile = __DIR__ . '/lib/invitecodes.txt';
   if (is_file($codesFile)) {
     foreach (file($codesFile) as $l) {
       $l = trim($l);
