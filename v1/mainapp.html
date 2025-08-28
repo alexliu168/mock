@@ -314,11 +314,12 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
     const sessionBox = qs('#session');
     const counter = qs('#counter'); const progressBar = qs('#progressBar');
     const fcZh = qs('#fcZh'); const fcEn = qs('#fcEn'); const chips = qs('#chips');
-    const btnPlay = qs('#btnPlay'); const btnRecord = qs('#btnRecord'); const btnStop = qs('#btnStop');
+  const btnPlay = qs('#btnPlay'); const btnRecord = qs('#btnRecord'); const btnStop = qs('#btnStop');
     const btnPlayback = qs('#btnPlayback'); const btnScore = qs('#btnScore'); const btnNext = qs('#btnNext');
   const resultBox = qs('#result');
   let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '';
   let recordedUrl = '';
+  let currentStandardUrl = '';
   // Recording timers/state for countdown
   let recordAutoStopTimer = null;
   let recordCountdownTimer = null;
@@ -507,13 +508,31 @@ async function startRecording() {
 
     // ====== 音訊控制 ======
     btnPlay.addEventListener('click', ()=>{
-      // Ensure playback toggle resets when playing reference audio
-      updatePlaybackUi(false);
+      if (!session || !session.course) return;
       const p = session.course.phrases[session.idx];
-      audioEl.src = p.audio;
-      audioEl.play().catch(()=>{});
+      currentStandardUrl = new URL(p.audio, location.href).href;
+      const isStdPlaying = (audioEl.src === currentStandardUrl) && !audioEl.paused;
+      if (isStdPlaying) {
+        try { audioEl.pause(); audioEl.currentTime = 0; } catch(_) {}
+        updateStandardPlayUi(false);
+      } else {
+        // stop recorded playback toggle UI and switch to standard audio
+        updatePlaybackUi(false);
+        audioEl.src = currentStandardUrl;
+        audioEl.currentTime = 0;
+        audioEl.play().then(()=>{ updateStandardPlayUi(true); }).catch(()=>{ updateStandardPlayUi(false); });
+      }
     });
-  btnRecord.addEventListener('click', startRecording);
+  // Merge record/stop into one toggle button
+  btnRecord.addEventListener('click', ()=>{
+    try {
+      if (mediaRecorder && mediaRecorder.state && mediaRecorder.state !== 'inactive') {
+        try { mediaRecorder.stop(); } catch(_) {}
+        return;
+      }
+    } catch(_) {}
+    startRecording();
+  });
     btnStop.addEventListener('click', ()=>{
       if(mediaRecorder && mediaRecorder.state!=='inactive'){ mediaRecorder.stop(); }
       if(fallbackRecorder){ try{ fallbackRecorder.stop(); }catch(e){ console.error(e); } }
@@ -534,11 +553,11 @@ async function startRecording() {
         return;
       }
       // Switch to recorded source and play
-      if (!isRecordedSource) {
+  if (!isRecordedSource) {
         audioEl.src = recordedUrl;
       }
       audioEl.currentTime = 0;
-      audioEl.play()
+  audioEl.play()
         .then(()=>{ updatePlaybackUi(true); })
         .catch(err => { console.warn('Playback failed:', err); updatePlaybackUi(false); });
     });
@@ -546,9 +565,11 @@ async function startRecording() {
     // Keep UI in sync with audio state (only when playing the recorded clip)
     audioEl.addEventListener('ended', ()=>{
       if (recordedUrl && audioEl.src === recordedUrl) updatePlaybackUi(false);
+      if (currentStandardUrl && audioEl.src === currentStandardUrl) updateStandardPlayUi(false);
     });
     audioEl.addEventListener('pause', ()=>{
       if (recordedUrl && audioEl.src === recordedUrl && audioEl.currentTime < (audioEl.duration||0)) updatePlaybackUi(false);
+      if (currentStandardUrl && audioEl.src === currentStandardUrl && audioEl.currentTime < (audioEl.duration||0)) updateStandardPlayUi(false);
     });
 
     // btnScore: call evaluateReal when resources ready, otherwise fallback to 
@@ -807,6 +828,15 @@ async function onScoreClick(){
     btnPlayback.textContent = isPlaying ? '停止' : '回放';
         btnRecord.disabled = !!isPlaying;
         btnPlay.disabled = !!isPlaying;
+      } catch(_) {}
+    }
+    // Toggle UI for standard play button and disable record/playback/score while playing standard audio
+    function updateStandardPlayUi(isPlaying){
+      try {
+        btnPlay.textContent = isPlaying ? '停止' : '▶︎ 播放';
+        btnRecord.disabled = !!isPlaying;
+        btnPlayback.disabled = !!isPlaying || !(recordedBlob && recordedBlob.size);
+        btnScore.disabled = !!isPlaying || !(recordedBlob && recordedBlob.size);
       } catch(_) {}
     }
     // Update the record button label with remaining seconds
