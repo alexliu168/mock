@@ -453,26 +453,26 @@ async function startRecording() {
     const chunks = [];
     mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
     mediaRecorder.onstop = () => {
-      const blob = new Blob(chunks, { type: mediaRecorder.mimeType || '' });
-      setPlaybackBlob(blob, mediaRecorder.mimeType || '');
-      btnRecord.disabled = false;
-      btnRecord.textContent = '● 录音';
-      btnPlayback.disabled = !(blob && blob.size);
-      // Clear timers when recording ends
-      clearRecordTimers();
-  // Re-enable controls after recording finishes
-  updateRecordingUi(false);
-      // iOS/Safari quirk: ensure buttons are re-evaluated on next tick
+      // Safari may dispatch dataavailable after stop; wait a tick to assemble blob
       setTimeout(() => {
         try {
-          const has = !!(recordedBlob && recordedBlob.size);
-          btnPlayback.disabled = !has;
-          btnScore.disabled = !has;
+          const blob = new Blob(chunks, { type: mediaRecorder.mimeType || '' });
+          setPlaybackBlob(blob, mediaRecorder.mimeType || '');
         } catch(_) {}
+        btnRecord.disabled = false;
+        btnRecord.textContent = '● 录音';
+        // Clear timers when recording ends
+        clearRecordTimers();
+        // Re-enable controls after recording finishes
+        updateRecordingUi(false);
+        // Robust re-evaluation on iOS timing quirks
+        try { refreshRecordedAvailability(); } catch(_) {}
+        setTimeout(refreshRecordedAvailability, 0);
+        try { requestAnimationFrame(() => refreshRecordedAvailability()); } catch(_) {}
+        setTimeout(refreshRecordedAvailability, 50);
       }, 0);
-  // Extra retries for iOS timing quirks
-  try { requestAnimationFrame(() => refreshRecordedAvailability()); } catch(_) {}
-  setTimeout(refreshRecordedAvailability, 50);
+      // Stop mic tracks
+      try { (mediaRecorder.stream?.getTracks?.() || []).forEach(t => t.stop()); } catch(_) {}
     };
     // Reset playback state on new recording
     recordedBlob = null;
@@ -486,6 +486,8 @@ async function startRecording() {
   btnPlayback.disabled = true;
   btnScore.disabled = true;
     mediaRecorder.start();
+  // Ensure source cleared is applied in iOS before we create new blob later
+  setTimeout(() => { try { if (audioEl.src) audioEl.src = ''; } catch(_) {} }, 0);
     // Start countdown
     recordStartedAt = Date.now();
     updateRecordCountdownLabel();
@@ -564,6 +566,8 @@ async function startRecording() {
 
     btnPlayback.addEventListener('click', ()=>{
       if(!recordedBlob || !recordedBlob.size){ return; }
+  // Defensive refresh before playing recorded audio
+  try { refreshRecordedAvailability(); } catch(_) {}
       const isRecordedSource = !!recordedUrl && audioEl.src === recordedUrl;
       // If already playing recorded audio, toggle to stop
       if (isRecordedSource && !audioEl.paused) {
@@ -601,6 +605,13 @@ async function startRecording() {
         refreshRecordedAvailability();
       }
       if (currentStandardUrl && audioEl.src === currentStandardUrl && audioEl.currentTime < (audioEl.duration||0)) updateStandardPlayUi(false);
+    });
+    audioEl.addEventListener('loadedmetadata', ()=>{
+      // When recorded clip becomes ready, refresh buttons
+      if (recordedUrl && audioEl.src === recordedUrl) {
+        refreshRecordedAvailability?.();
+        setTimeout(() => refreshRecordedAvailability?.(), 0);
+      }
     });
 
     // btnScore: call evaluateReal when resources ready, otherwise fallback to 
