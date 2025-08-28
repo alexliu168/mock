@@ -11,8 +11,30 @@
 
 header('Content-Type: application/json; charset=utf-8');
 
-// 1) session + optional local env (no auth.php)
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+// 1) Require an existing session from morningsir.php, do NOT create new sessions here.
+if (session_status() === PHP_SESSION_NONE) {
+  // Must have a session cookie already
+  $sname = session_name();
+  $sid = isset($_COOKIE[$sname]) ? preg_replace('/[^A-Za-z0-9,-]/', '', $_COOKIE[$sname]) : '';
+  if ($sid === '') { header('Location: morningsir.php'); exit; }
+
+  // If using files handler, ensure the backing session file exists; otherwise redirect.
+  $handler = ini_get('session.save_handler') ?: 'files';
+  if ($handler === 'files') {
+    $spath = ini_get('session.save_path') ?: sys_get_temp_dir();
+    // session.save_path may contain prefixes like "N;/path" — take the last segment as the path
+    if (strpos($spath, ';') !== false) { $parts = explode(';', $spath); $spath = end($parts); }
+    $spath = rtrim($spath, "/\\");
+    $sfile = $spath . DIRECTORY_SEPARATOR . 'sess_' . $sid;
+    if (!is_file($sfile)) { header('Location: morningsir.php'); exit; }
+  }
+
+  // Open the existing session (won't create a new one for files handler when file check passed)
+  session_id($sid);
+  session_start();
+}
+// Require the login flag
+if (empty($_SESSION['invite_code'])) { header('Location: morningsir.php'); exit; }
 
 // Optional per-environment config (define constants or setenv here)
 if (is_file(__DIR__ . '/setup-sa.php')) { require_once __DIR__ . '/setup-sa.php'; }
