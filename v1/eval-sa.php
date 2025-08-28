@@ -75,7 +75,7 @@ function append_eval_server_log($entry) {
  */
 function summarizeSpeechAce($input): string
 {
-    // 1) Parse input (supports: raw SA JSON, decoded array, or wrapper with 'sa_raw')
+    // 1) Parse input (supports raw SA JSON, decoded array, or wrapper with 'sa_raw')
     $data = null;
     if (is_string($input)) {
         $maybe = json_decode($input, true);
@@ -99,7 +99,7 @@ function summarizeSpeechAce($input): string
         return '<div class="sa-report">无法解析评测结果。请确认输入为 SpeechAce 的 JSON 或已解码数组。</div>';
     }
 
-    // 2) helper getter
+    // 2) helpers
     $get = function ($arr, $path, $default = null) {
         $cur = $arr;
         foreach (explode('.', $path) as $seg) {
@@ -111,17 +111,18 @@ function summarizeSpeechAce($input): string
         }
         return $cur;
     };
+    $e = function($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); };
 
     // 3) extract scores
-    $text     = $get($data, 'text_score.text', '');
-    $saPron   = $get($data, 'speechace_score.pronunciation');
-    $saFlu    = $get($data, 'speechace_score.fluency');
-    $ieltsPron= $get($data, 'ielts_score.pronunciation');
-    $ieltsFlu = $get($data, 'ielts_score.fluency');
-    $ptePron  = $get($data, 'pte_score.pronunciation');
-    $pteFlu   = $get($data, 'pte_score.fluency');
-    $cefrPron = $get($data, 'cefr_score.pronunciation');
-    $cefrFlu  = $get($data, 'cefr_score.fluency');
+    $text      = $get($data, 'text_score.text', '');
+    $saPron    = $get($data, 'speechace_score.pronunciation');
+    $saFlu     = $get($data, 'speechace_score.fluency');
+    $ieltsPron = $get($data, 'ielts_score.pronunciation');
+    $ieltsFlu  = $get($data, 'ielts_score.fluency');
+    $ptePron   = $get($data, 'pte_score.pronunciation');
+    $pteFlu    = $get($data, 'pte_score.fluency');
+    $cefrPron  = $get($data, 'cefr_score.pronunciation');
+    $cefrFlu   = $get($data, 'cefr_score.fluency');
 
     // 4) fluency metrics
     $overall  = $get($data, 'fluency.overall_metrics', $get($data, 'fluency.segment_metrics_list.0', []));
@@ -133,7 +134,8 @@ function summarizeSpeechAce($input): string
     $maxRun               = $get($overall, 'max_length_run', null);
 
     // 5) words & phones
-    $wordList = $get($data, 'text_score.word_score_list', []) ?: [];
+    $wordList = $get($data, 'text_score.word_score_list', []);
+    if (!is_array($wordList)) $wordList = [];
 
     $phoneHints = [
         'th'=>'齿擦音 /θ/ 或 /ð/：舌尖轻触上齿背，保持持续气流',
@@ -208,11 +210,12 @@ function summarizeSpeechAce($input): string
         }
     }
 
-    // 6) Mark low words in sentence (HTML, red color). Safe-escape non-word chunks.
-    $markLowWordsHtml = function(string $sentence, array $lowMap): string {
+    // 6) Mark low words in sentence (HTML, red color)
+    $markLowWordsHtml = function(string $sentence, array $lowMap) use ($e): string {
         if ($sentence === '') return '';
-        // split by words (keep delimiters)
+        // split by words (keep delimiters); includes simple apostrophes like don't
         $parts = preg_split('/([A-Za-z]+(?:\'[A-Za-z]+)?)/u', $sentence, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false) return $e($sentence);
         $out = '';
         foreach ($parts as $i => $chunk) {
             if ($chunk === '') continue;
@@ -220,21 +223,16 @@ function summarizeSpeechAce($input): string
                 $lc = mb_strtolower($chunk, 'UTF-8');
                 if (isset($lowMap[$lc])) {
                     $score = round($lowMap[$lc]['score']);
-                    $out .= '<span class="sa-low" title="得分 '.$score.'">'.$this->e($chunk).'</span>';
+                    $out .= '<span class="sa-low" title="得分 '.$e($score).'">'.$e($chunk).'</span>';
                 } else {
-                    $out .= $this->e($chunk);
+                    $out .= $e($chunk);
                 }
             } else {
-                $out .= $this->e($chunk);
+                $out .= $e($chunk);
             }
         }
         return $out;
     };
-
-    // helper escaper as closure property workaround
-    $escaper = function($s){ return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); };
-    // bind escaper into $markLowWordsHtml
-    $markLowWordsHtml = $markLowWordsHtml->bindTo((object)['e'=>$escaper], null);
     $markedSentence = $markLowWordsHtml($text, $lowWordsMap);
 
     // 7) Advice
@@ -260,7 +258,7 @@ function summarizeSpeechAce($input): string
         $tmp = [];
         foreach ($weakPhones as $p => $sc) {
             $hint = $phoneHints[$p] ?? null;
-            $tmp[] = $escaper($p).'≈'.round($sc).($hint ? ('：'.$escaper($hint)) : '');
+            $tmp[] = $e($p).'≈'.round($sc).($hint ? ('：'.$e($hint)) : '');
         }
         $advice[] = "集中纠正低分音素（最小对立练习 + 跟读）：".implode('；', $tmp);
     }
@@ -268,16 +266,16 @@ function summarizeSpeechAce($input): string
         $advice[] = "存在多处重音不一致，建议先确立单词正确重音，再叠加句子节奏与语调。";
     }
 
-    // 8) Build “主要薄弱点” detail for low words
+    // 8) Weak sections (low words first)
     $weakSections = [];
     if (!empty($lowWordsMap)) {
         $lowList = array_values($lowWordsMap);
-        usort($lowList, function($a,$b){ return $a['score'] <=> $b['score']; });
+        usort($lowList, fn($a,$b) => $a['score'] <=> $b['score']);
         $lowList = array_slice($lowList, 0, 6);
 
         $items = [];
         foreach ($lowList as $it) {
-            $w = $escaper($it['word']);
+            $w = $e($it['word']);
             $s = round($it['score']);
             $phoneTips = [];
             if (!empty($it['phones'])) {
@@ -285,35 +283,36 @@ function summarizeSpeechAce($input): string
                 $picked = array_slice($it['phones'], 0, 2, true);
                 foreach ($picked as $p => $psc) {
                     $tip = $phoneHints[$p] ?? null;
-                    $phoneTips[] = $escaper($p).'≈'.round($psc).($tip ? ('（'.$escaper($tip).'）') : '');
+                    $phoneTips[] = $e($p).'≈'.round($psc).($tip ? ('（'.$e($tip).'）') : '');
                 }
             }
             $extra = $phoneTips ? '<div class="sa-sub">关键音素：'.implode('；', $phoneTips).'</div>' : '';
-            $items[] = '<li><span class="sa-low">'.$w.'</span><span class="sa-mild">（得分 '.$s.'）</span>'.$extra.'</li>';
+            $items[] = '<li><span class="sa-low">'.$w.'</span><span class="sa-mild">（得分 '.$e($s).'）</span>'.$extra.'</li>';
         }
-        $weakSections[] = '<div class="sa-kicker">低分词（&lt;60，已在句子中红色高亮）</div><ul class="sa-list">'.$items=implode('', $items).'</ul>';
+        $itemsHtml = implode('', $items);
+        $weakSections[] = '<div class="sa-kicker">低分词（&lt;60，已在句子中红色高亮）</div><ul class="sa-list">'.$itemsHtml.'</ul>';
     }
     if (!empty($weakPhones)) {
-        $tmp = [];
+        $tmpLis = [];
         foreach ($weakPhones as $p => $sc) {
             $hint = $phoneHints[$p] ?? null;
-            $tmp[] = '<li><code>'.$escaper($p).'</code><span class="sa-mild">≈'.round($sc).'</span>'.($hint ? '：'.$escaper($hint) : '').'</li>';
+            $tmpLis[] = '<li><code>'.$e($p).'</code><span class="sa-mild">≈'.round($sc).'</span>'.($hint ? '：'.$e($hint) : '').'</li>';
         }
-        $weakSections[] = '<div class="sa-kicker">全局低分音素</div><ul class="sa-list">'.$items=implode('', $tmp).'</ul>';
+        $tmpHtml = implode('', $tmpLis);
+        $weakSections[] = '<div class="sa-kicker">全局低分音素</div><ul class="sa-list">'.$tmpHtml.'</ul>';
     }
     if ($stressMismatches > 0) {
-        $weakSections[] = '<div class="sa-kicker">重音问题</div><div class="sa-note">疑似不一致次数：<b>'.$escaper((string)$stressMismatches).'</b>。建议先确认单词重音，再练习句子节奏。</div>';
+        $weakSections[] = '<div class="sa-kicker">重音问题</div><div class="sa-note">疑似不一致次数：<b>'.$e($stressMismatches).'</b>。建议先确认单词重音，再练习句子节奏。</div>';
     }
 
     // 9) Overall badges
-    $badge = function($label, $p, $f) use ($escaper){
+    $badge = function($label, $p, $f) use ($e){
         $parts = [];
-        if ($p !== null) $parts[] = '发音 '.$escaper((string)$p);
-        if ($f !== null) $parts[] = '流利度 '.$escaper((string)$f);
-        return $parts ? '<div class="sa-badge"><span class="sa-badge-title">'.$escaper($label).'</span><span>'.implode('，', $parts).'</span></div>' : '';
+        if ($p !== null) $parts[] = '发音 '.$e($p);
+        if ($f !== null) $parts[] = '流利度 '.$e($f);
+        return $parts ? '<div class="sa-badge"><span class="sa-badge-title">'.$e($label).'</span><span>'.implode('，', $parts).'</span></div>' : '';
     };
-    $badges = '';
-    $badges .= $badge('SpeechAce', $saPron, $saFlu);
+    $badges  = $badge('SpeechAce', $saPron, $saFlu);
     $badges .= $badge('IELTS(估算)', $ieltsPron, $ieltsFlu);
     $badges .= $badge('PTE(估算)', $ptePron, $pteFlu);
     $badges .= $badge('CEFR(估算)', $cefrPron, $cefrFlu);
@@ -322,51 +321,48 @@ function summarizeSpeechAce($input): string
     $chips = [];
     if ($speechRateSyllPerSec !== null) $chips[] = '音节速率≈'.round($speechRateSyllPerSec,2).' 音节/秒';
     if ($articRate !== null)            $chips[] = '发音速率≈'.round($articRate,2);
-    if ($pauseCount !== null)           $chips[] = '停顿次数 '.$escaper((string)$pauseCount);
+    if ($pauseCount !== null)           $chips[] = '停顿次数 '.$e($pauseCount);
     if ($pauseDur !== null)             $chips[] = '总停顿≈'.round($pauseDur,2).' 秒';
     if ($mlr !== null)                  $chips[] = '平均连续≈'.round($mlr,2).' 秒';
     if ($maxRun !== null)               $chips[] = '最长连续≈'.round($maxRun,2).' 秒';
-
-    $chipsHtml = '';
-    if ($chips) {
-        $c = array_map(function($t){ return '<span class="sa-chip">'.$t.'</span>'; }, $chips);
-        $chipsHtml = implode('', $c);
-    }
+    $chipsHtml = implode('', array_map(fn($t)=>'<span class="sa-chip">'.$t.'</span>', $chips));
 
     // 11) Advice list
     $adviceHtml = '';
     if (!empty($advice)) {
-        $lis = array_map(function($t) use ($escaper){ return '<li>'.$escaper($t).'</li>'; }, $advice);
+        $lis = array_map(fn($t)=>'<li>'.$e($t).'</li>', $advice);
         $adviceHtml = '<ul class="sa-list sa-list-dot">'.implode('', $lis).'</ul>';
     }
 
     // 12) Assemble HTML
-    $titleSentence = $text ? '<div class="sa-section"><div class="sa-title">评测句子</div><div class="sa-sentence">'.$markedSentence.'</div><div class="sa-legend">注：<span class="sa-low">红色</span>表示该词得分 &lt; 60，需要重点改进。</div></div>' : '';
+    $titleSentence = $text !== ''
+        ? '<div class="sa-section"><div class="sa-title">评测句子</div><div class="sa-sentence">'.$markedSentence.'</div><div class="sa-legend">注：<span class="sa-low">红色</span>表示该词得分 &lt; 60，需要重点改进。</div></div>'
+        : '';
 
     $html =
     '<div class="sa-report">
         <style>
-            .sa-report{font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; color:#111; line-height:1.6; font-size:14px;}
-            .sa-title{font-weight:700; margin:6px 0 6px; font-size:15px;}
-            .sa-section{background:#fff; border:1px solid #eee; border-radius:12px; padding:14px 16px; margin:10px 0; box-shadow:0 1px 2px rgba(0,0,0,.03);}
-            .sa-sentence{font-size:16px; line-height:1.8; margin-top:4px;}
-            .sa-low{color:#e02424; font-weight:700;}
-            .sa-legend{color:#666; font-size:12px; margin-top:6px;}
-            .sa-badges{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
-            .sa-badge{background:#f6f7f9; border:1px solid #eef0f2; padding:8px 10px; border-radius:10px; display:flex; gap:8px; align-items:center;}
-            .sa-badge-title{font-weight:600; color:#36454f;}
-            .sa-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
-            .sa-chip{background:#fafafa; border:1px solid #eee; border-radius:999px; padding:5px 10px; font-size:12px;}
-            .sa-kicker{font-weight:600; margin:6px 0 4px; color:#36454f;}
-            .sa-list{padding-left:18px; margin:6px 0;}
+            .sa-report{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:#111;line-height:1.6;font-size:14px;}
+            .sa-title{font-weight:700;margin:6px 0 6px;font-size:15px;}
+            .sa-section{background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;margin:10px 0;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+            .sa-sentence{font-size:16px;line-height:1.8;margin-top:4px;}
+            .sa-low{color:#e02424;font-weight:700;}
+            .sa-legend{color:#666;font-size:12px;margin-top:6px;}
+            .sa-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+            .sa-badge{background:#f6f7f9;border:1px solid #eef0f2;padding:8px 10px;border-radius:10px;display:flex;gap:8px;align-items:center;}
+            .sa-badge-title{font-weight:600;color:#36454f;}
+            .sa-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+            .sa-chip{background:#fafafa;border:1px solid #eee;border-radius:999px;padding:5px 10px;font-size:12px;}
+            .sa-kicker{font-weight:600;margin:6px 0 4px;color:#36454f;}
+            .sa-list{padding-left:18px;margin:6px 0;}
             .sa-list li{margin:4px 0;}
             .sa-list-dot{list-style:disc;}
             .sa-mild{color:#777;}
-            .sa-note{color:#444; font-size:13px; margin-top:4px;}
-        </style>
-        '.$titleSentence.'
+            .sa-note{color:#444;font-size:13px;margin-top:4px;}
+        </style>'.
+        $titleSentence.
 
-        <div class="sa-section">
+        '<div class="sa-section">
             <div class="sa-title">总体水平</div>
             <div class="sa-badges">'.$badges.'</div>
         </div>
@@ -388,6 +384,7 @@ function summarizeSpeechAce($input): string
 
     return $html;
 }
+
 
 $SPEECHACE_KEY  = getenv('SPEECHACE_API_KEY') ?: (defined('SPEECHACE_API_KEY') ? SPEECHACE_API_KEY : '');
 $SPEECHACE_BASE = getenv('SPEECHACE_API_URL') ?: (defined('SPEECHACE_API_URL') ? SPEECHACE_API_URL : 'https://api2.speechace.com');
@@ -613,13 +610,8 @@ $out = [
 if ($include_summary) {
   try {
   $sum = summarizeSpeechAce($sa);
-  // Provide multiple keys for robustness
-  $out['summary_zh'] = $sum;           // primary
-  $out['summary_zh_html'] = $sum;      // explicit HTML key
-  $out['summary_html'] = $sum;         // generic HTML key
-  // Plain-text fallback for older clients or quick previews
-  $plain = trim(preg_replace('/\s+/', ' ', strip_tags($sum)));
-  if ($plain !== '') { $out['summary_zh_text'] = $plain; }
+  // Only return a single HTML field to conserve bandwidth
+  $out['summary_zh'] = $sum;
   } catch (\Throwable $e) {
     // If summarization fails, omit the field and log
     append_eval_server_log([
