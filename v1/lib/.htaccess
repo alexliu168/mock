@@ -1,4 +1,8 @@
 Options -Indexes
-<FilesMatch "\.(php|phtml|php5|phar)$">
+# Deny all direct HTTP access to anything in this folder (protects invitecodes.txt, HTML includes, etc.)
+<IfModule mod_authz_core.c>
   Require all denied
-</FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Deny from all
+</IfModule>
