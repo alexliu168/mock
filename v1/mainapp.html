@@ -449,6 +449,16 @@ async function startRecording() {
       btnPlayback.disabled = !(blob && blob.size);
       // Clear timers when recording ends
       clearRecordTimers();
+  // Re-enable controls after recording finishes
+  updateRecordingUi(false);
+      // iOS/Safari quirk: ensure buttons are re-evaluated on next tick
+      setTimeout(() => {
+        try {
+          const has = !!(recordedBlob && recordedBlob.size);
+          btnPlayback.disabled = !has;
+          btnScore.disabled = !has;
+        } catch(_) {}
+      }, 0);
     };
     // Reset playback state on new recording
     recordedBlob = null;
@@ -458,7 +468,9 @@ async function startRecording() {
     audioEl.src = '';
   updatePlaybackUi(false);
   updateStandardPlayUi(false);
-    btnPlayback.disabled = true;
+  // While recording starts, temporarily disable playback and score
+  btnPlayback.disabled = true;
+  btnScore.disabled = true;
     mediaRecorder.start();
     // Start countdown
     recordStartedAt = Date.now();
@@ -555,7 +567,15 @@ async function startRecording() {
 
     // Keep UI in sync with audio state (only when playing the recorded clip)
     audioEl.addEventListener('ended', ()=>{
-      if (recordedUrl && audioEl.src === recordedUrl) updatePlaybackUi(false);
+      if (recordedUrl && audioEl.src === recordedUrl) {
+        updatePlaybackUi(false);
+        // ensure buttons reflect availability of the latest recorded clip
+        try {
+          const has = !!(recordedBlob && recordedBlob.size);
+          btnPlayback.disabled = !has;
+          btnScore.disabled = !has;
+        } catch(_) {}
+      }
       if (currentStandardUrl && audioEl.src === currentStandardUrl) updateStandardPlayUi(false);
     });
     audioEl.addEventListener('pause', ()=>{
