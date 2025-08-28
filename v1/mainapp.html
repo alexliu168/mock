@@ -455,25 +455,27 @@ async function startRecording() {
     // Reset playback state on new recording
     recordedBlob = null;
     recordedMimeType = '';
-    // Stop any ongoing playback and reset UI
-    try { audioEl.pause(); audioEl.currentTime = 0; } catch(_) {}
+  // Stop any ongoing playback and reset UI
+  try { audioEl.pause(); audioEl.currentTime = 0; } catch(_) {}
     audioEl.src = '';
-    updatePlaybackUi(false);
+  updatePlaybackUi(false);
+  updateStandardPlayUi(false);
     btnPlayback.disabled = true;
     mediaRecorder.start();
-    btnRecord.disabled = true;
     // Start countdown
     recordStartedAt = Date.now();
     updateRecordCountdownLabel();
     recordCountdownTimer = setInterval(updateRecordCountdownLabel, 500);
     btnStop.disabled   = false;
+  // While recording, disable play/playback/score but keep record button enabled for toggle
+  updateRecordingUi(true);
     // auto-stop after 15s
     recordAutoStopTimer = setTimeout(()=>{ try{ mediaRecorder?.state!=='inactive' && mediaRecorder.stop(); }catch(_){} }, RECORD_MAX_MS);
   } catch (err) {
   alert('麦克风权限被拒或不可用。');
     console.error(err);
     // Reset label on failure
-    try { clearRecordTimers(); btnRecord.textContent = '● 录音'; btnRecord.disabled = false; btnStop.disabled = true; } catch(_){}
+    try { clearRecordTimers(); btnRecord.textContent = '● 录音'; btnRecord.disabled = false; btnStop.disabled = true; updateRecordingUi(false); } catch(_) {}
   }
 }
 
@@ -541,6 +543,7 @@ async function startRecording() {
       btnPlayback.disabled = !(recordedBlob && recordedBlob.size);
       btnRecord.textContent = '● 录音';
   clearRecordTimers();
+  updateRecordingUi(false);
     });
 
     btnPlayback.addEventListener('click', ()=>{
@@ -837,6 +840,14 @@ async function onScoreClick(){
         btnRecord.disabled = !!isPlaying;
         btnPlayback.disabled = !!isPlaying || !(recordedBlob && recordedBlob.size);
         btnScore.disabled = !!isPlaying || !(recordedBlob && recordedBlob.size);
+      } catch(_) {}
+    }
+    // While recording, disable play/playback/score, keep record enabled (to toggle stop)
+    function updateRecordingUi(isRecording){
+      try {
+        btnPlay.disabled = !!isRecording;
+        btnPlayback.disabled = !!isRecording || !(recordedBlob && recordedBlob.size);
+        btnScore.disabled = !!isRecording || !(recordedBlob && recordedBlob.size);
       } catch(_) {}
     }
     // Update the record button label with remaining seconds
