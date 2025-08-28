@@ -75,7 +75,7 @@ function append_eval_server_log($entry) {
  */
 function summarizeSpeechAce($input): string
 {
-    // 1) Parse input (supports raw SA JSON, decoded array, or wrapper with 'sa_raw')
+    // 1) Parse input (raw SA JSON, decoded array, or wrapper with 'sa_raw')
     $data = null;
     if (is_string($input)) {
         $maybe = json_decode($input, true);
@@ -96,10 +96,9 @@ function summarizeSpeechAce($input): string
         }
     }
     if (!$data || !is_array($data)) {
-        return '<div class="sa-report">无法解析评测结果。请确认输入为 SpeechAce 的 JSON 或已解码数组。</div>';
+        return '<div class="sa-report">无法解析评测结果。</div>';
     }
 
-    // 2) helpers
     $get = function ($arr, $path, $default = null) {
         $cur = $arr;
         foreach (explode('.', $path) as $seg) {
@@ -111,98 +110,50 @@ function summarizeSpeechAce($input): string
         }
         return $cur;
     };
-    $e = function($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); };
+    $e = fn($s)=>htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
-    // 3) extract scores
+    // Sentence + words
     $text      = $get($data, 'text_score.text', '');
-    $saPron    = $get($data, 'speechace_score.pronunciation');
-    $saFlu     = $get($data, 'speechace_score.fluency');
-    $ieltsPron = $get($data, 'ielts_score.pronunciation');
-    $ieltsFlu  = $get($data, 'ielts_score.fluency');
-    $ptePron   = $get($data, 'pte_score.pronunciation');
-    $pteFlu    = $get($data, 'pte_score.fluency');
-    $cefrPron  = $get($data, 'cefr_score.pronunciation');
-    $cefrFlu   = $get($data, 'cefr_score.fluency');
-
-    // 4) fluency metrics
-    $overall  = $get($data, 'fluency.overall_metrics', $get($data, 'fluency.segment_metrics_list.0', []));
-    $speechRateSyllPerSec = $get($overall, 'speech_rate', null);
-    $articRate            = $get($overall, 'articulation_rate', null);
-    $pauseCount           = $get($overall, 'all_pause_count', null);
-    $pauseDur             = $get($overall, 'all_pause_duration', null);
-    $mlr                  = $get($overall, 'mean_length_run', null);
-    $maxRun               = $get($overall, 'max_length_run', null);
-
-    // 5) words & phones
-    $wordList = $get($data, 'text_score.word_score_list', []);
+    $wordList  = $get($data, 'text_score.word_score_list', []);
     if (!is_array($wordList)) $wordList = [];
 
     $phoneHints = [
+        'r' =>'/r/：舌尖后卷不触上颚',
+        'l' =>'/l/：舌尖顶上齿龈，尾音更清楚',
+        'd' =>'浊塞音 /d/：注意声带启动',
+        's' =>'清擦音 /s/：保持窄通道、稳定气流',
         'th'=>'齿擦音 /θ/ 或 /ð/：舌尖轻触上齿背，保持持续气流',
-        'dh'=>'浊 th /ð/：声带轻震，如 “the”',
-        't' =>'清塞音 /t/：送气更清晰', 'd'=>'浊塞音 /d/：注意声带启动',
-        's' =>'清擦音 /s/：保持窄通道、稳定气流', 'z'=>'浊擦音 /z/：带轻微嗡鸣',
-        'sh'=>'/ʃ/：卷舌或舌面后缩，如 “ship”', 'zh'=>'/ʒ/：如 “measure” 中间音',
-        'r' =>'/r/：舌尖后卷不触上颚', 'l'=>'/l/：舌尖顶上齿龈，尾音更清楚',
-        'ae'=>'/æ/：张口扁平，如 “cat”', 'ah'=>'/ʌ/：放松短促，如 “cup”',
-        'ao'=>'/ɔː/ 或 /ɑː/：后舌、圆唇', 'er'=>'/ər/（美式卷舌元音）',
-        'iy'=>'/iː/：如 “see”', 'ih'=>'/ɪ/：如 “sit”', 'ey'=>'/eɪ/：如 “say”',
-        'ay'=>'/aɪ/：如 “side”', 'ow'=>'/oʊ/：如 “go”', 'uw'=>'/uː/：如 “you”',
-        'v' =>'上齿轻触下唇并发声', 'p'=>'清双唇塞音 /p/：加强送气',
-        'k' =>'清软腭塞音 /k/：后舌顶软腭', 'g'=>'浊软腭塞音 /g/',
-        'hh'=>'/h/：轻气流起始', 'm'=>'/m/：双唇闭合鼻腔共鸣', 'n'=>'/n/：舌尖抵上齿龈鼻腔共鸣',
+        'ao'=>'/ɔː/ 或 /ɑː/：后舌、圆唇',
+        // ...可继续补充
     ];
 
     $stressMismatches = 0;
-    $totalWords = 0;
-
-    $lowWordsMap = [];   // word(lower) => ['word'=>原词, 'score'=>数值, 'phones'=>[...]]
-    $phonesIssues = [];  // global low phones <70
+    $lowWordsMap = [];
+    $phonesIssues = [];
 
     foreach ($wordList as $w) {
-        $totalWords++;
         $wText  = $w['word'] ?? '';
         $wScore = isset($w['quality_score']) ? floatval($w['quality_score']) : null;
-
         if ($wText && $wScore !== null && $wScore < 60) {
-            $key = mb_strtolower($wText, 'UTF-8');
-            $lowWordsMap[$key] = ['word'=>$wText, 'score'=>$wScore, 'phones'=>[]];
+            $lowWordsMap[mb_strtolower($wText, 'UTF-8')] = [
+                'word'=>$wText,'score'=>$wScore,'phones'=>[]
+            ];
         }
-
-        if (!empty($w['phone_score_list']) && is_array($w['phone_score_list'])) {
+        if (!empty($w['phone_score_list'])) {
             foreach ($w['phone_score_list'] as $ph) {
-                if (isset($ph['stress_level'], $ph['predicted_stress_level'])) {
-                    $exp = $ph['stress_level'];
-                    $pred = $ph['predicted_stress_level'];
-                    if ($exp !== null && $pred !== null && $exp !== $pred) {
-                        $stressMismatches++;
-                    }
+                if (isset($ph['stress_level'],$ph['predicted_stress_level'])
+                    && $ph['stress_level']!==null && $ph['predicted_stress_level']!==null
+                    && $ph['stress_level']!=$ph['predicted_stress_level']) {
+                    $stressMismatches++;
                 }
-                if (isset($ph['phone'], $ph['quality_score'])) {
-                    $p  = strtolower($ph['phone']);
-                    $qs = floatval($ph['quality_score']);
-                    if ($qs < 70) {
-                        $phonesIssues[$p] = isset($phonesIssues[$p]) ? min($phonesIssues[$p], $qs) : $qs;
-                        $lwKey = mb_strtolower($wText, 'UTF-8');
+                if (isset($ph['phone'],$ph['quality_score'])) {
+                    $p=strtolower($ph['phone']); $qs=floatval($ph['quality_score']);
+                    if ($qs<70) {
+                        $phonesIssues[$p] = isset($phonesIssues[$p]) ? min($phonesIssues[$p],$qs) : $qs;
+                        $lwKey = mb_strtolower($wText,'UTF-8');
                         if (isset($lowWordsMap[$lwKey])) {
-                            $lowWordsMap[$lwKey]['phones'][$p] =
-                                isset($lowWordsMap[$lwKey]['phones'][$p]) ? min($lowWordsMap[$lwKey]['phones'][$p], $qs) : $qs;
-                        }
-                    }
-                }
-                if (!empty($ph['child_phones'])) {
-                    foreach ($ph['child_phones'] as $cp) {
-                        if (isset($cp['quality_score'], $cp['sound_most_like'])) {
-                            $p  = strtolower($cp['sound_most_like']);
-                            $qs = floatval($cp['quality_score']);
-                            if ($qs < 70 && $p) {
-                                $phonesIssues[$p] = isset($phonesIssues[$p]) ? min($phonesIssues[$p], $qs) : $qs;
-                                $lwKey = mb_strtolower($wText, 'UTF-8');
-                                if (isset($lowWordsMap[$lwKey])) {
-                                    $lowWordsMap[$lwKey]['phones'][$p] =
-                                        isset($lowWordsMap[$lwKey]['phones'][$p]) ? min($lowWordsMap[$lwKey]['phones'][$p], $qs) : $qs;
-                                }
-                            }
+                            $lowWordsMap[$lwKey]['phones'][$p] = 
+                              isset($lowWordsMap[$lwKey]['phones'][$p]) ? min($lowWordsMap[$lwKey]['phones'][$p],$qs) : $qs;
                         }
                     }
                 }
@@ -210,149 +161,99 @@ function summarizeSpeechAce($input): string
         }
     }
 
-    // 6) Mark low words in sentence (HTML, red color)
+    // Mark low words
     $markLowWordsHtml = function(string $sentence, array $lowMap) use ($e): string {
-        if ($sentence === '') return '';
-        // split by words (keep delimiters); includes simple apostrophes like don't
-        $parts = preg_split('/([A-Za-z]+(?:\'[A-Za-z]+)?)/u', $sentence, -1, PREG_SPLIT_DELIM_CAPTURE);
-        if ($parts === false) return $e($sentence);
-        $out = '';
-        foreach ($parts as $i => $chunk) {
-            if ($chunk === '') continue;
-            if ($i % 2 === 1) { // word token
-                $lc = mb_strtolower($chunk, 'UTF-8');
+        if ($sentence==='') return '';
+        $parts = preg_split('/([A-Za-z]+(?:\'[A-Za-z]+)?)/u',$sentence,-1,PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts===false) return $e($sentence);
+        $out='';
+        foreach ($parts as $i=>$chunk) {
+            if ($chunk==='') continue;
+            if ($i%2===1) {
+                $lc=mb_strtolower($chunk,'UTF-8');
                 if (isset($lowMap[$lc])) {
-                    $score = round($lowMap[$lc]['score']);
-                    $out .= '<span class="sa-low" title="得分 '.$e($score).'">'.$e($chunk).'</span>';
+                    $score=round($lowMap[$lc]['score']);
+                    $out.='<span class="sa-low" title="得分 '.$e($score).'">'.$e($chunk).'</span>';
                 } else {
-                    $out .= $e($chunk);
+                    $out.=$e($chunk);
                 }
-            } else {
-                $out .= $e($chunk);
-            }
+            } else $out.=$e($chunk);
         }
         return $out;
     };
-    $markedSentence = $markLowWordsHtml($text, $lowWordsMap);
+    $markedSentence=$markLowWordsHtml($text,$lowWordsMap);
 
-    // 7) Advice
-    $advice = [];
-    if ($speechRateSyllPerSec !== null) {
-        if ($speechRateSyllPerSec > 4.8) {
-            $advice[] = "语速偏快，建议降至每秒约 3–4.5 个音节，突出重读与语调起伏。";
-        } elseif ($speechRateSyllPerSec < 2.8) {
-            $advice[] = "语速偏慢，尝试合并词组、减少不必要停顿，提升连贯度。";
-        }
-    }
-    if ($pauseCount !== null && $pauseDur !== null) {
-        if ($pauseCount >= 5 || $pauseDur > 0.6) {
-            $advice[] = "停顿略多/略长，建议在词组边界轻微停顿，词内保持连读。";
-        }
-    }
-    if ($mlr !== null && $mlr < 1.0) {
-        $advice[] = "平均连续语段较短，练习“功能词+实义词”组合输出，延长一次性表达时长。";
-    }
-    asort($phonesIssues);
-    $weakPhones = array_slice($phonesIssues, 0, 6, true);
-    if (!empty($weakPhones)) {
-        $tmp = [];
-        foreach ($weakPhones as $p => $sc) {
-            $hint = $phoneHints[$p] ?? null;
-            $tmp[] = $e($p).'≈'.round($sc).($hint ? ('：'.$e($hint)) : '');
-        }
-        $advice[] = "集中纠正低分音素（最小对立练习 + 跟读）：".implode('；', $tmp);
-    }
-    if ($stressMismatches > max(1, intval($totalWords * 0.2))) {
-        $advice[] = "存在多处重音不一致，建议先确立单词正确重音，再叠加句子节奏与语调。";
-    }
-
-    // 8) Weak sections (low words first)
-    $weakSections = [];
+    // Weak sections
+    $weakSections=[];
     if (!empty($lowWordsMap)) {
-        $lowList = array_values($lowWordsMap);
-        usort($lowList, fn($a,$b) => $a['score'] <=> $b['score']);
-        $lowList = array_slice($lowList, 0, 6);
-
-        $items = [];
-        foreach ($lowList as $it) {
-            $w = $e($it['word']);
-            $s = round($it['score']);
-            $phoneTips = [];
-            if (!empty($it['phones'])) {
+        $lowList=array_values($lowWordsMap);
+        usort($lowList,fn($a,$b)=>$a['score']<=>$b['score']);
+        $lowList=array_slice($lowList,0,6);
+        $items=[];
+        foreach($lowList as $it){
+            $w=$e($it['word']); $s=round($it['score']);
+            $phoneTips=[];
+            if(!empty($it['phones'])){
                 asort($it['phones']);
-                $picked = array_slice($it['phones'], 0, 2, true);
-                foreach ($picked as $p => $psc) {
-                    $tip = $phoneHints[$p] ?? null;
-                    $phoneTips[] = $e($p).'≈'.round($psc).($tip ? ('（'.$e($tip).'）') : '');
+                $picked=array_slice($it['phones'],0,2,true);
+                foreach($picked as $p=>$psc){
+                    $tip=$phoneHints[$p]??null;
+                    $phoneTips[]=$e($p).'≈'.round($psc).($tip?'（'.$e($tip).'）':'');
                 }
             }
-            $extra = $phoneTips ? '<div class="sa-sub">关键音素：'.implode('；', $phoneTips).'</div>' : '';
-            $items[] = '<li><span class="sa-low">'.$w.'</span><span class="sa-mild">（得分 '.$e($s).'）</span>'.$extra.'</li>';
+            $extra=$phoneTips?'<div class="sa-sub">关键音素：'.implode('；',$phoneTips).'</div>':'';
+            $items[]='<li><span class="sa-low">'.$w.'</span><span class="sa-mild">（得分 '.$e($s).'）</span>'.$extra.'</li>';
         }
-        $itemsHtml = implode('', $items);
-        $weakSections[] = '<div class="sa-kicker">低分词（&lt;60，已在句子中红色高亮）</div><ul class="sa-list">'.$itemsHtml.'</ul>';
+        $weakSections[]='<div class="sa-kicker">低分词（&lt;60，已在句子中红色高亮）</div><ul class="sa-list">'.implode('',$items).'</ul>';
     }
-    if (!empty($weakPhones)) {
-        $tmpLis = [];
-        foreach ($weakPhones as $p => $sc) {
-            $hint = $phoneHints[$p] ?? null;
-            $tmpLis[] = '<li><code>'.$e($p).'</code><span class="sa-mild">≈'.round($sc).'</span>'.($hint ? '：'.$e($hint) : '').'</li>';
+    if(!empty($phonesIssues)){
+        asort($phonesIssues);
+        $tmpLis=[];
+        foreach($phonesIssues as $p=>$sc){
+            $hint=$phoneHints[$p]??null;
+            $tmpLis[]='<li><code>'.$e($p).'</code><span class="sa-mild">≈'.round($sc).'</span>'.($hint?'：'.$e($hint):'').'</li>';
         }
-        $tmpHtml = implode('', $tmpLis);
-        $weakSections[] = '<div class="sa-kicker">全局低分音素</div><ul class="sa-list">'.$tmpHtml.'</ul>';
+        $weakSections[]='<div class="sa-kicker">全局低分音素</div><ul class="sa-list">'.implode('',$tmpLis).'</ul>';
     }
-    if ($stressMismatches > 0) {
-        $weakSections[] = '<div class="sa-kicker">重音问题</div><div class="sa-note">疑似不一致次数：<b>'.$e($stressMismatches).'</b>。建议先确认单词重音，再练习句子节奏。</div>';
-    }
-
-    // 9) Overall badges
-    $badge = function($label, $p, $f) use ($e){
-        $parts = [];
-        if ($p !== null) $parts[] = '发音 '.$e($p);
-        if ($f !== null) $parts[] = '流利度 '.$e($f);
-        return $parts ? '<div class="sa-badge"><span class="sa-badge-title">'.$e($label).'</span><span>'.implode('，', $parts).'</span></div>' : '';
-    };
-    $badges  = $badge('SpeechAce', $saPron, $saFlu);
-    $badges .= $badge('IELTS(估算)', $ieltsPron, $ieltsFlu);
-    $badges .= $badge('PTE(估算)', $ptePron, $pteFlu);
-    $badges .= $badge('CEFR(估算)', $cefrPron, $cefrFlu);
-
-    // 10) Fluency chips
-    $chips = [];
-    if ($speechRateSyllPerSec !== null) $chips[] = '音节速率≈'.round($speechRateSyllPerSec,2).' 音节/秒';
-    if ($articRate !== null)            $chips[] = '发音速率≈'.round($articRate,2);
-    if ($pauseCount !== null)           $chips[] = '停顿次数 '.$e($pauseCount);
-    if ($pauseDur !== null)             $chips[] = '总停顿≈'.round($pauseDur,2).' 秒';
-    if ($mlr !== null)                  $chips[] = '平均连续≈'.round($mlr,2).' 秒';
-    if ($maxRun !== null)               $chips[] = '最长连续≈'.round($maxRun,2).' 秒';
-    $chipsHtml = implode('', array_map(fn($t)=>'<span class="sa-chip">'.$t.'</span>', $chips));
-
-    // 11) Advice list
-    $adviceHtml = '';
-    if (!empty($advice)) {
-        $lis = array_map(fn($t)=>'<li>'.$e($t).'</li>', $advice);
-        $adviceHtml = '<ul class="sa-list sa-list-dot">'.implode('', $lis).'</ul>';
+    if($stressMismatches>0){
+        $weakSections[]='<div class="sa-kicker">重音问题</div><div class="sa-note">疑似不一致次数：<b>'.$e($stressMismatches).'</b></div>';
     }
 
-    // 12) Assemble HTML
-    $titleSentence = $text !== ''
-        ? '<div class="sa-section"><div class="sa-title">评测句子</div><div class="sa-sentence">'.$markedSentence.'</div><div class="sa-legend">注：<span class="sa-low">红色</span>表示该词得分 &lt; 60，需要重点改进。</div></div>'
-        : '';
+    // 改进建议
+    $advice = [];
+    if(!empty($phonesIssues)){
+        asort($phonesIssues);
+        $picked=array_slice($phonesIssues,0,6,true);
+        $tmp=[];
+        foreach($picked as $p=>$sc){
+            $hint=$phoneHints[$p]??null;
+            $tmp[]=$e($p).'≈'.round($sc).($hint?'：'.$e($hint):'');
+        }
+        $advice[]="集中纠正低分音素：".implode('；',$tmp);
+    }
+    if($stressMismatches>0){
+        $advice[]="注意单词重音，避免与系统预测不一致。";
+    }
+    $adviceHtml='';
+    if(!empty($advice)){
+        $lis=array_map(fn($t)=>'<li>'.$e($t).'</li>',$advice);
+        $adviceHtml='<ul class="sa-list sa-list-dot">'.implode('',$lis).'</ul>';
+    }
 
-    $html =
+    // Assemble
+    $titleSentence=$text!==''?
+      '<div class="sa-section"><div class="sa-title">评测句子</div><div class="sa-sentence">'.$markedSentence.'</div><div class="sa-legend">注：<span class="sa-low">红色</span>表示该词得分 &lt; 60</div></div>'
+      :'';
+
+    $html=
     '<div class="sa-report">
         <style>
             .sa-report{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:#111;line-height:1.6;font-size:14px;}
-            .sa-title{font-weight:700;margin:6px 0 6px;font-size:15px;}
+            .sa-title{font-weight:700;margin:6px 0;font-size:15px;}
             .sa-section{background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;margin:10px 0;box-shadow:0 1px 2px rgba(0,0,0,.03);}
             .sa-sentence{font-size:16px;line-height:1.8;margin-top:4px;}
             .sa-low{color:#e02424;font-weight:700;}
             .sa-legend{color:#666;font-size:12px;margin-top:6px;}
-            .sa-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
-            .sa-badge{background:#f6f7f9;border:1px solid #eef0f2;padding:8px 10px;border-radius:10px;display:flex;gap:8px;align-items:center;}
-            .sa-badge-title{font-weight:600;color:#36454f;}
-            .sa-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-            .sa-chip{background:#fafafa;border:1px solid #eee;border-radius:999px;padding:5px 10px;font-size:12px;}
             .sa-kicker{font-weight:600;margin:6px 0 4px;color:#36454f;}
             .sa-list{padding-left:18px;margin:6px 0;}
             .sa-list li{margin:4px 0;}
@@ -360,31 +261,18 @@ function summarizeSpeechAce($input): string
             .sa-mild{color:#777;}
             .sa-note{color:#444;font-size:13px;margin-top:4px;}
         </style>'.
-        $titleSentence.
+        $titleSentence;
 
-        '<div class="sa-section">
-            <div class="sa-title">总体水平</div>
-            <div class="sa-badges">'.$badges.'</div>
-        </div>
-
-        <div class="sa-section">
-            <div class="sa-title">流利度 / 节奏</div>
-            <div class="sa-chips">'.$chipsHtml.'</div>
-        </div>';
-
-    if (!empty($weakSections)) {
-        $html .= '<div class="sa-section"><div class="sa-title">主要薄弱点</div>'.implode('', $weakSections).'</div>';
+    if(!empty($weakSections)){
+        $html.='<div class="sa-section"><div class="sa-title">主要薄弱点</div>'.implode('',$weakSections).'</div>';
+    }
+    if($adviceHtml){
+        $html.='<div class="sa-section"><div class="sa-title">改进建议</div>'.$adviceHtml.'</div>';
     }
 
-    if ($adviceHtml) {
-        $html .= '<div class="sa-section"><div class="sa-title">改进建议</div>'.$adviceHtml.'</div>';
-    }
-
-    $html .= '</div>';
-
+    $html.='</div>';
     return $html;
 }
-
 
 $SPEECHACE_KEY  = getenv('SPEECHACE_API_KEY') ?: (defined('SPEECHACE_API_KEY') ? SPEECHACE_API_KEY : '');
 $SPEECHACE_BASE = getenv('SPEECHACE_API_URL') ?: (defined('SPEECHACE_API_URL') ? SPEECHACE_API_URL : 'https://api2.speechace.com');
