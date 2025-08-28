@@ -711,7 +711,11 @@ async function onScoreClick(){
 
   // If server provided a Simplified Chinese summary, offer a toggle to show/hide it
   try {
-    const summary = (typeof data.summary_zh === 'string') ? data.summary_zh.trim() : '';
+    const summaryRaw = (typeof data.summary_zh_html === 'string' && data.summary_zh_html)
+      || (typeof data.summary_html === 'string' && data.summary_html)
+      || (typeof data.summary_zh === 'string' && data.summary_zh)
+      || '';
+    const summary = summaryRaw.trim();
     if (summary) {
       const wrap = document.createElement('div');
       wrap.className = 'summary-zh-wrap';
