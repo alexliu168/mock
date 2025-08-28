@@ -348,6 +348,8 @@ document.body.appendChild(audioEl);
     btnScore.disabled = !has;
     // reset toggle UI
     updatePlaybackUi(false);
+  // iOS: ensure buttons reflect latest availability
+  try { refreshRecordedAvailability(); setTimeout(refreshRecordedAvailability, 0); } catch(_) {}
   }
     // Helper: encode Float32 samples to WAV ArrayBuffer
 
@@ -428,6 +430,15 @@ function redactEvalObject(obj){
 }
 
 
+    // Centralized availability refresh for recorded clip
+    function refreshRecordedAvailability(){
+      try {
+        const has = !!(recordedBlob && recordedBlob.size);
+        btnPlayback.disabled = !has;
+        btnScore.disabled = !has;
+      } catch(_) {}
+    }
+
   //start recording and forecewave
 
 // Simplified: always use MediaRecorder with platform default format
@@ -459,6 +470,9 @@ async function startRecording() {
           btnScore.disabled = !has;
         } catch(_) {}
       }, 0);
+  // Extra retries for iOS timing quirks
+  try { requestAnimationFrame(() => refreshRecordedAvailability()); } catch(_) {}
+  setTimeout(refreshRecordedAvailability, 50);
     };
     // Reset playback state on new recording
     recordedBlob = null;
@@ -539,6 +553,8 @@ async function startRecording() {
     try {
       if (mediaRecorder && mediaRecorder.state && mediaRecorder.state !== 'inactive') {
         try { mediaRecorder.stop(); } catch(_) {}
+  // Fallback: ensure UI re-evaluates soon after stopping
+  setTimeout(refreshRecordedAvailability, 100);
         return;
       }
     } catch(_) {}
@@ -579,7 +595,11 @@ async function startRecording() {
       if (currentStandardUrl && audioEl.src === currentStandardUrl) updateStandardPlayUi(false);
     });
     audioEl.addEventListener('pause', ()=>{
-      if (recordedUrl && audioEl.src === recordedUrl && audioEl.currentTime < (audioEl.duration||0)) updatePlaybackUi(false);
+      if (recordedUrl && audioEl.src === recordedUrl && audioEl.currentTime < (audioEl.duration||0)) {
+        updatePlaybackUi(false);
+        // Also refresh availability in case of iOS timing
+        refreshRecordedAvailability();
+      }
       if (currentStandardUrl && audioEl.src === currentStandardUrl && audioEl.currentTime < (audioEl.duration||0)) updateStandardPlayUi(false);
     });
 
