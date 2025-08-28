@@ -106,15 +106,14 @@ if (!$is_authenticated) {
 
 // User is authenticated
 $user = ['code'=>$code, 'name'=>$codes[$code] ?: $code];
-$DISPLAY_NAME = htmlspecialchars($user['label'] ?: $user['code'], ENT_QUOTES, 'UTF-8');
+// Use 'name' (label) when available, else fallback to code
+$DISPLAY_NAME = htmlspecialchars(($user['name'] ?: $user['code']), ENT_QUOTES, 'UTF-8');
 
 // Include the HTML content with session variables injected
 ob_start();
 include __DIR__ . '/mainapp.html';
 $html = ob_get_clean();
 
-// Update version badge in injected HTML from V6 to V5
-$html = preg_replace('/<span class=\\"version-badge\\">V6<\\/span>/', '<span class=\"version-badge\">V5<\/span>', $html);
 // Inject session variables at the beginning of the first script tag
 $sessionScript = "<script>\n    // Session variables from PHP\n    window.SESSION_USER = " . json_encode($user) . ";\n    window.DISPLAY_NAME = " . json_encode($DISPLAY_NAME) . ";\n    ";
 $html = preg_replace('/<script>/', $sessionScript, $html, 1);
