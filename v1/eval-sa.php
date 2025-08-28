@@ -612,7 +612,14 @@ $out = [
 // Optionally attach a Simplified Chinese summary paragraph
 if ($include_summary) {
   try {
-    $out['summary_zh'] = summarizeSpeechAce($sa);
+  $sum = summarizeSpeechAce($sa);
+  // Provide multiple keys for robustness
+  $out['summary_zh'] = $sum;           // primary
+  $out['summary_zh_html'] = $sum;      // explicit HTML key
+  $out['summary_html'] = $sum;         // generic HTML key
+  // Plain-text fallback for older clients or quick previews
+  $plain = trim(preg_replace('/\s+/', ' ', strip_tags($sum)));
+  if ($plain !== '') { $out['summary_zh_text'] = $plain; }
   } catch (\Throwable $e) {
     // If summarization fails, omit the field and log
     append_eval_server_log([
