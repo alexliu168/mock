@@ -98,11 +98,11 @@
   <h2>我的</h2>
   <div class="card card--pad">
 <label class="muted" for="nickname">昵称</label>
-<input id="nickname" placeholder="请输入昵称" style="display:block;width:100%;padding:12px;margin-top:6px;border-radius:10px;border:1px solid #e5e7eb"/>
+<input id="nickname" placeholder="请输入昵称" class="nickname-input"/>
 <div class="hint"></div>
 
-      <hr style="margin:14px 0;border:none;border-top:1px solid #eef2ff" />
-      <h3 style="margin:0 0 8px 0">我的成就</h3>
+  <hr class="profile-divider" />
+  <h3 class="h3-achievement">我的成就</h3>
       <div class="pins-grid" id="myPins">
         <!-- pins will be inserted here -->
       </div>
@@ -208,8 +208,12 @@ const EVAL_URL = 'eval-sa.php';
 window.MS_SHOW_TIPS = window.MS_SHOW_TIPS ?? false;
 
 
+// Debug logging switch (turn off in production)
+window.MS_DEBUG = (typeof window.MS_DEBUG === 'boolean') ? window.MS_DEBUG : false;
+
 //for debug use only
 async function logEvent(event, data, msg) {
+  if (!window.MS_DEBUG) return;
   try {
     const fd = new FormData();
     fd.append('event', event);
@@ -392,6 +396,7 @@ document.body.appendChild(audioEl);
 }
 
 async function debugBeacon(tag, obj) {
+  if (!window.MS_DEBUG) return;
   try {
     const fd = new FormData();
     fd.append('event', tag);
@@ -644,7 +649,7 @@ async function onScoreClick(){
     }
     if (!ext) ext = 'webm';
 
-    await debugBeacon('eval_pre', {
+  await debugBeacon('eval_pre', {
   hasBlob: !!(blob && blob.size), mime, size: blob?.size||0, textLen: text.length, ext,
   ...getEvalCtx()
     });
@@ -674,13 +679,13 @@ async function onScoreClick(){
     try { data = await res.json(); }
     catch {
       // avoid logging key named "text"; include context
-      await debugBeacon('eval_parse_err', { body: await res.text().catch(()=>null), ...getEvalCtx() });
+  await debugBeacon('eval_parse_err', { body: await res.text().catch(()=>null), ...getEvalCtx() });
       throw new Error('json');
     }
 
     // log sanitized API response
     const redacted = redactEvalObject(data);
-    await debugBeacon('eval_api_response', { response: redacted, ...getEvalCtx() });
+  await debugBeacon('eval_api_response', { response: redacted, ...getEvalCtx() });
 
     // NEW contract
     if (!res.ok || data?.status !== 'ok') throw new Error('bad');
@@ -693,7 +698,7 @@ async function onScoreClick(){
           .filter(x => x.word)
       : [];
     const mistakes = weakWords.map(w => w.word);
-    await debugBeacon('eval_mistakes', { mistakes, ...getEvalCtx() });
+  await debugBeacon('eval_mistakes', { mistakes, ...getEvalCtx() });
 
   // compute metrics early and render per sequence
   const flu = Number(data.fluency ?? NaN);
@@ -711,7 +716,7 @@ async function onScoreClick(){
     };
 
     // one-line eval summary for analytics
-    await debugBeacon('eval_done', {
+  await debugBeacon('eval_done', {
       score,
       fluency: Number(data.fluency ?? null),
       overall: Number(data.overall ?? null),
@@ -721,7 +726,7 @@ async function onScoreClick(){
     });
     enable?.([btnNext, btnScore]);
   } catch (e) {
-    await debugBeacon('eval_catch', { err: String(e), ...getEvalCtx() });
+  await debugBeacon('eval_catch', { err: String(e), ...getEvalCtx() });
   toast('评分失败，请重试');
     enable?.([btnScore]);
   }
