@@ -754,8 +754,24 @@ async function onScoreClick(){
     } else if (textSummary) {
       content.textContent = textSummary;
     } else {
-      content.textContent = '暂无详细解释';
-      content.className = 'muted';
+      // Generate a concise local explanation as fallback
+      const safe = (s) => {
+        try { return String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); } catch(_) { return ''; }
+      };
+      const parts = [];
+      const metaText = safe(data?.meta?.text || '');
+      if (metaText) parts.push(`<div class="sa-section"><div class="sa-title">评测句子</div><div>${metaText}</div></div>`);
+      const metrics = [];
+      if (Number.isFinite(Number(data?.overall))) metrics.push(`总分 ${safe(Math.round(Number(data.overall)))}`);
+      if (Number.isFinite(Number(data?.pronunciation))) metrics.push(`发音 ${safe(Math.round(Number(data.pronunciation)))}`);
+      if (Number.isFinite(Number(data?.fluency))) metrics.push(`流利度 ${safe(Math.round(Number(data.fluency)))}`);
+      if (metrics.length) parts.push(`<div class="sa-section"><div class="sa-title">总体水平</div><div>${metrics.join('，')}</div></div>`);
+      const weak = Array.isArray(data?.weak_words) ? data.weak_words.slice(0,6) : [];
+      if (weak.length) {
+        const lis = weak.map(w => `<li>${safe(w.word)}${Number.isFinite(Number(w.score)) ? `（${safe(Math.round(Number(w.score)))}）` : ''}${w.tip?`：${safe(w.tip)}`:''}</li>`).join('');
+        parts.push(`<div class="sa-section"><div class="sa-title">主要薄弱点</div><ul class="sa-list">${lis}</ul></div>`);
+      }
+      content.innerHTML = parts.join('') || '<div class="muted">暂无详细解释</div>';
     }
 
     row.appendChild(title);
