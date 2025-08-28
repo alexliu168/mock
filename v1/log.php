@@ -1,13 +1,26 @@
 <?php
 // log.php — write client debug events to uploads/<CODE>/logs/client.log
-require __DIR__ . '/auth.php';
+// Simplified: no auth.php; just start a session and use invite_code if present
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 // Check if user is logged in, otherwise use anonymous
 $user_code = strtoupper($_SESSION['invite_code'] ?? '');
 $user_label = '';
 
+// Optional: load label from invitecodes.txt if available
+function ms_load_codes($path){
+  $o=[]; if (is_file($path)) {
+    foreach (file($path) as $l) {
+      $l = trim($l);
+      if ($l === '' || $l[0] === '#') continue;
+      $p = array_map('trim', explode(',', $l, 2));
+      $o[strtoupper($p[0])] = $p[1] ?? '';
+    }
+  }
+  return $o;
+}
 if ($user_code) {
-  $codes = load_codes(__DIR__ . '/invitecodes.txt');
+  $codes = ms_load_codes(__DIR__ . '/invitecodes.txt');
   $user_label = $codes[$user_code] ?? '';
 }
 

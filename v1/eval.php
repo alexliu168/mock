@@ -12,8 +12,8 @@ function out_json($data, $code = 200) {
   exit;
 }
 
-// 1) session + optional local env
-require __DIR__ . '/auth.php';
+// 1) session + optional local env (no auth.php)
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 if (is_file(__DIR__ . '/setup.php')) { require __DIR__ . '/setup.php'; }
 
 // 2) health ping (no login required)
@@ -30,8 +30,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ping'])) {
   ]);
 }
 
-// 3) gate real requests
-$user = require_login();
+// 3) gate real requests: redirect to morningsir.php if not authenticated
+$user = null;
+{
+  $code = strtoupper($_SESSION['invite_code'] ?? '');
+  if ($code === '') {
+    header('Location: morningsir.php'); exit;
+  }
+  // Optional: map label
+  $label = '';
+  $codes = [];
+  $codesFile = __DIR__ . '/invitecodes.txt';
+  if (is_file($codesFile)) {
+    foreach (file($codesFile) as $l) {
+      $l = trim($l);
+      if ($l === '' || $l[0] === '#') continue;
+      $p = array_map('trim', explode(',', $l, 2));
+      $codes[strtoupper($p[0])] = $p[1] ?? '';
+    }
+  }
+  $user = ['code'=>$code, 'label'=>$codes[$code] ?? ''];
+}
 
 
 // 4) config from env

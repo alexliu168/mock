@@ -11,8 +11,8 @@
 
 header('Content-Type: application/json; charset=utf-8');
 
-// 1) session + optional local env
-require __DIR__ . '/auth.php';
+// 1) session + optional local env (no auth.php)
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 // Optional per-environment config (define constants or setenv here)
 if (is_file(__DIR__ . '/setup-sa.php')) { require_once __DIR__ . '/setup-sa.php'; }
