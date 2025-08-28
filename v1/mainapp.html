@@ -673,7 +673,7 @@ async function onScoreClick(){
     const res = await fetch(EVAL_URL, { method:'POST', body: fd, credentials:'include' });
   await debugBeacon('eval_status', { status: res.status, ...getEvalCtx() });
 
-    if (res.status === 401 || res.status === 403) { location.href = 'login.php'; return; }
+  if (res.status === 401 || res.status === 403) { location.href = 'morningsir.php'; return; }
 
     let data = {};
     try { data = await res.json(); }
