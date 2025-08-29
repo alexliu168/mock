@@ -9,6 +9,8 @@
  * Output (application/json): compact summary + weak_words tips
  */
 
+// SOD checkpoint: 2025-08-29 — start-of-day marker
+
 header('Content-Type: application/json; charset=utf-8');
 
 // 1) Require an existing session from morningsir.php, do NOT create new sessions here.
