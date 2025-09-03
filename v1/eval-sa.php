@@ -56,11 +56,11 @@ function out_json($data, $code = 200) {
 // --- server-side logging (one JSONL per invocation) ---
 function append_eval_server_log($entry) {
   try {
-    // Use invite code folder when available, else _anon
-    $code = strtoupper($_SESSION['invite_code'] ?? '');
-    $dir = __DIR__ . '/uploads/' . ($code ?: '_anon') . '/logs';
+    // Shared daily log for all users: uploads/evallog/evalresult-mm-dd.log
+    $dir = __DIR__ . '/uploads/evallog';
     if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
-    $file = $dir . '/server-eval.log';
+    $fname = 'evalresult-' . date('m-d') . '.log';
+    $file = $dir . '/' . $fname;
     $payload = array_merge(['ts' => date('c')], $entry);
     @file_put_contents($file, json_encode($payload, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) . PHP_EOL, FILE_APPEND | LOCK_EX);
   } catch (\Throwable $e) { /* ignore logging errors */ }
