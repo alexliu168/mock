@@ -44,6 +44,7 @@
         <div class="row">
           <div id="courseTitle" class="course-title"></div>
           <div class="right muted" id="counter">0/0</div>
+          <button type="button" class="btn secondary hidden" id="btnExitCourse">退出课程</button>
         </div>
         <div class="progress"><div id="progressBar"></div></div>
 
@@ -602,6 +603,11 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
         }
         switchTab(tabName);
       }));
+      // Wire explicit exit course button
+      try {
+        const btnExit = document.getElementById('btnExitCourse');
+        if (btnExit) btnExit.addEventListener('click', () => exitPracticeToCourseList());
+      } catch(_) {}
       const nick = qs('#nickname'); nick.value = store.nick; nick.addEventListener('change', e=>store.nick=e.target.value);
       renderCourses(); updateReports(); wirePracticeControls();
       // initialize tab icons
@@ -906,7 +912,9 @@ async function startRecording() {
   session = { course, idx:0, results:[], hard:new Set(), easy:new Set() };
   // hide the static "課程列表" heading when the user starts a session
   const practiceHeader = qs('#practice h2'); if(practiceHeader) practiceHeader.classList.add('hidden');
-  qs('#courseList').classList.add('hidden'); sessionBox.classList.remove('hidden'); loadCard();
+  qs('#courseList').classList.add('hidden'); sessionBox.classList.remove('hidden');
+  try { qs('#btnExitCourse')?.classList.remove('hidden'); } catch(_) {}
+  loadCard();
     }
     // Exit current practice session back to the course list (invoked on re-click of Practice tab)
     function exitPracticeToCourseList(){
@@ -933,6 +941,8 @@ async function startRecording() {
         try { btnRecord.disabled = false; btnRecord.textContent = '● 录音'; updateRecordingUi(false); updatePlaybackUi(false); updateStandardPlayUi(false); } catch(_) {}
         // Hide summary if visible
         try { qs('#summary')?.classList.remove('visible'); } catch(_) {}
+        // Hide exit button
+        try { qs('#btnExitCourse')?.classList.add('hidden'); } catch(_) {}
       } catch(e){ /* swallow */ }
     }
 
