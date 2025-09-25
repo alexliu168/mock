@@ -45,6 +45,11 @@ if (is_file(__DIR__ . '/lib/setup-sa.php')) { require_once __DIR__ . '/lib/setup
 // You can still override per-request via POST save_audio=1/0
 $SAVE_AUDIO_DEFAULT = false;
 
+// Threshold for marking a word as "low" (red highlight & weak word list). Centralized here.
+if (!defined('MS_LOW_WORD_THRESHOLD')) {
+  define('MS_LOW_WORD_THRESHOLD', 75); // previously 60
+}
+
 // --- tiny JSON helper ---
 function out_json($data, $code = 200) {
   http_response_code($code);
@@ -69,7 +74,7 @@ function append_eval_server_log($entry) {
 // enblish explaination of the result
 /**
  * Summarize SpeechAce response (array or JSON or wrapper with sa_raw) into a styled HTML report (Simplified Chinese).
- * - Red-highlight any word with quality_score < 60.
+ * - Red-highlight any word with quality_score < 75 (updated from <60 on 2025-09-25).
  * - Sections: 评测句子, 总体水平, 流利度/节奏, 主要薄弱点, 改进建议.
  *
  * @param array|string $input
@@ -133,10 +138,10 @@ function summarizeSpeechAce($input): string
     $lowWordsMap = [];
     $phonesIssues = [];
 
-    foreach ($wordList as $w) {
+  foreach ($wordList as $w) {
         $wText  = $w['word'] ?? '';
         $wScore = isset($w['quality_score']) ? floatval($w['quality_score']) : null;
-        if ($wText && $wScore !== null && $wScore < 60) {
+  if ($wText && $wScore !== null && $wScore < MS_LOW_WORD_THRESHOLD) {
             $lowWordsMap[mb_strtolower($wText, 'UTF-8')] = [
                 'word'=>$wText,'score'=>$wScore,'phones'=>[]
             ];
@@ -163,7 +168,7 @@ function summarizeSpeechAce($input): string
         }
     }
 
-    // Mark low words
+  // Mark low words (threshold < MS_LOW_WORD_THRESHOLD)
     $markLowWordsHtml = function(string $sentence, array $lowMap) use ($e): string {
         if ($sentence==='') return '';
         $parts = preg_split('/([A-Za-z]+(?:\'[A-Za-z]+)?)/u',$sentence,-1,PREG_SPLIT_DELIM_CAPTURE);
@@ -206,7 +211,7 @@ function summarizeSpeechAce($input): string
             $extra=$phoneTips?'<div class="sa-sub">关键音素：'.implode('；',$phoneTips).'</div>':'';
             $items[]='<li><span class="sa-low">'.$w.'</span><span class="sa-mild">（得分 '.$e($s).'）</span>'.$extra.'</li>';
         }
-        $weakSections[]='<div class="sa-kicker">低分词（&lt;60，已在句子中红色高亮）</div><ul class="sa-list">'.implode('',$items).'</ul>';
+  $weakSections[]='<div class="sa-kicker">低分词（&lt;'.MS_LOW_WORD_THRESHOLD.'，已在句子中红色高亮）</div><ul class="sa-list">'.implode('',$items).'</ul>';
     }
     if(!empty($phonesIssues)){
         asort($phonesIssues);
@@ -244,7 +249,7 @@ function summarizeSpeechAce($input): string
 
     // Assemble
     $titleSentence=$text!==''?
-  '<div class="sa-section"><div class="sa-title">评测句子</div><div class="sa-sentence">'.$markedSentence.'</div><div class="sa-legend">注：<span class="sa-low">红色</span>表示该词得分偏低，需要多加练习</div></div>'
+  '<div class="sa-section"><div class="sa-title">评测句子</div><div class="sa-sentence">'.$markedSentence.'</div><div class="sa-legend">注：<span class="sa-low">红色</span>表示该词得分偏低（&lt;'.MS_LOW_WORD_THRESHOLD.'），需要多加练习</div></div>'
       :'';
 
     $html=
@@ -451,14 +456,14 @@ $ielts_pr = $ielts['pronunciation'] ?? null;
 $pte_pr   = $pte['pronunciation'] ?? null;
 $cefr_pr  = $cefr['pronunciation'] ?? null;
 
-// Heuristic tips for weak words (< 60)
+// Heuristic tips for weak words (< MS_LOW_WORD_THRESHOLD)
 $weak_words = [];
 $words = $ts['word_score_list'] ?? [];
 foreach ($words as $w) {
   $wrd = $w['word'] ?? '';
   $sc  = isset($w['quality_score']) ? (int)round($w['quality_score']) : null;
   if ($wrd === '' || $sc === null) continue;
-  if ($sc >= 60) continue; // only weak ones
+  if ($sc >= MS_LOW_WORD_THRESHOLD) continue; // only weak ones
 
   // Simple tip heuristics based on spelling
   $tip = 'pronounce clearly';
