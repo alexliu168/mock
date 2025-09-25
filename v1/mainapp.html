@@ -895,7 +895,8 @@ async function startRecording() {
   // ensure any swipe animation classes are cleared
   card.classList.remove('animating','swipe-left','swipe-right');
       const p = session.course.phrases[session.idx]; fcZh.textContent = p.zh; fcEn.textContent = p.en;
-      chips.innerHTML = ''; (p.en.split(/\s+/).slice(0,4)).forEach(w=>{ const s=document.createElement('span'); s.className='pill'; s.textContent=w.replace(/[^a-zA-Z']/g,''); chips.appendChild(s); });
+  // Remove pills display: just clear container
+  chips.innerHTML = '';
       counter.textContent = `${session.idx+1}/${total}`; progressBar.style.width = `${((session.idx)/total)*100}%`;
   clearResult(); disable([btnPlayback, btnScore]);
     }

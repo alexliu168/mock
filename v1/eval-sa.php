@@ -244,7 +244,7 @@ function summarizeSpeechAce($input): string
 
     // Assemble
     $titleSentence=$text!==''?
-      '<div class="sa-section"><div class="sa-title">评测句子</div><div class="sa-sentence">'.$markedSentence.'</div><div class="sa-legend">注：<span class="sa-low">红色</span>表示该词得分 &lt; 60</div></div>'
+  '<div class="sa-section"><div class="sa-title">评测句子</div><div class="sa-sentence">'.$markedSentence.'</div><div class="sa-legend">注：<span class="sa-low">红色</span>表示该词得分偏低，需要多加练习</div></div>'
       :'';
 
     $html=
