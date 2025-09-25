@@ -1,0 +1,28 @@
+# Restrict direct access to mainapp.html; allow it to be server-side included by PHP.
+<Files "mainapp.html">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</Files>
+
+# Optional: explicitly allow PHP scripts and assets (default Apache behavior)
+<FilesMatch "\.(php|css|js|png|jpg|jpeg|gif|svg|mp3|json)$">
+  <IfModule mod_authz_core.c>
+    Require all granted
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Allow from all
+  </IfModule>
+</FilesMatch>
+
+# Security headers (lightweight, can extend later)
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
