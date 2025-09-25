@@ -1,11 +1,11 @@
 # One per line: CODE[,Optional Label]
-AVS4821, Alex
-AVS7395, Ming
-AVS1603, Ravina
-AVS5948, Ben
-AVS2730, Lussi
-AVS4677, Queenie2
-AVS8888, Queenie
+AVS4821, Admin Alex
+AVS7395, Admin Ming
+AVS1603, Admin Ravina
+AVS5948, Admin Benjamin
+AVS2730, Admin Lussi
+AVS4677, Admin CKLI
+AVS8888, Admin Queenie
 AVS8614, WLSO33079
 AVS3079, WLSO32869
 AVS9526, WLSO32802
