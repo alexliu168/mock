@@ -60,6 +60,7 @@ if (!$is_authenticated) {
       session_regenerate_id(true);
       $_SESSION['invite_code']  = $try;
       $_SESSION['invite_label'] = $codes[$try];
+      $_SESSION['user_id'] = $codes[$try];
       header('Location: morningsir.php'); exit;
     } else {
       $login_error = '邀請碼無效，請重新輸入。';
@@ -111,11 +112,11 @@ $DISPLAY_NAME = htmlspecialchars(($user['name'] ?: $user['code']), ENT_QUOTES, '
 
 // Include the HTML content with session variables injected
 ob_start();
-include __DIR__ . '/lib/mainapp.html';
+include __DIR__ . '/mainapp.html';
 $html = ob_get_clean();
 
 // Inject session variables at the beginning of the first script tag
-$sessionScript = "<script>\n    // Global debug switch (default OFF)\n    window.MS_DEBUG = (typeof window.MS_DEBUG === 'boolean') ? window.MS_DEBUG : false;\n    // Session variables from PHP\n    window.SESSION_USER = " . json_encode($user) . ";\n    window.DISPLAY_NAME = " . json_encode($DISPLAY_NAME) . ";\n    ";
+$sessionScript = "<script>\n // Global debug switch (default OFF)\n    window.MS_DEBUG = (typeof window.MS_DEBUG === 'boolean') ? window.MS_DEBUG : false;\n    // Session variables from PHP\n    window.SESSION_USER = " . json_encode($user) . ";\n    window.DISPLAY_NAME = " . json_encode($DISPLAY_NAME) . ";\n    ";
 $html = preg_replace('/<script>/', $sessionScript, $html, 1);
 
 echo $html;
