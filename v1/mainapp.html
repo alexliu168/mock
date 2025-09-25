@@ -592,7 +592,16 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
 
     // ====== 初始化 ======
     document.addEventListener('DOMContentLoaded', () => {
-      Tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+      // Custom tab wiring with special re-click logic for Practice tab
+      Tabs.forEach(t => t.addEventListener('click', () => {
+        const tabName = t.dataset.tab;
+        // If user re-clicks the active Practice tab while a session is in progress, exit to course list
+        if (tabName === 'practice' && t.classList.contains('active') && session && session.course) {
+          exitPracticeToCourseList();
+          return; // stay on practice tab
+        }
+        switchTab(tabName);
+      }));
       const nick = qs('#nickname'); nick.value = store.nick; nick.addEventListener('change', e=>store.nick=e.target.value);
       renderCourses(); updateReports(); wirePracticeControls();
       // initialize tab icons
@@ -898,6 +907,33 @@ async function startRecording() {
   // hide the static "課程列表" heading when the user starts a session
   const practiceHeader = qs('#practice h2'); if(practiceHeader) practiceHeader.classList.add('hidden');
   qs('#courseList').classList.add('hidden'); sessionBox.classList.remove('hidden'); loadCard();
+    }
+    // Exit current practice session back to the course list (invoked on re-click of Practice tab)
+    function exitPracticeToCourseList(){
+      try {
+        // Stop any ongoing recording
+        try { if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch(_) {}
+        clearRecordTimers?.();
+        // Reset UI state
+        session = null;
+        sessionBox.classList.add('hidden');
+        // Reveal heading and course list
+        const practiceHeader = qs('#practice h2'); if(practiceHeader) practiceHeader.classList.remove('hidden');
+        const cl = qs('#courseList'); if (cl) cl.classList.remove('hidden');
+        // Clear flashcard content to avoid stale phrase display
+        try { fcZh.textContent = '—'; fcEn.textContent = '—'; chips.innerHTML=''; counter.textContent='0/0'; progressBar.style.width='0%'; } catch(_) {}
+        // Clear result panel
+        try { clearResult(); } catch(_) {}
+        // Reset standard audio & recorded clip state
+        try {
+          if (audioEl) { audioEl.pause(); audioEl.currentTime = 0; audioEl.src=''; }
+          setPlaybackBlob(null, '');
+        } catch(_) {}
+        // Reset buttons
+        try { btnRecord.disabled = false; btnRecord.textContent = '● 录音'; updateRecordingUi(false); updatePlaybackUi(false); updateStandardPlayUi(false); } catch(_) {}
+        // Hide summary if visible
+        try { qs('#summary')?.classList.remove('visible'); } catch(_) {}
+      } catch(e){ /* swallow */ }
     }
 
     function loadCard(){
