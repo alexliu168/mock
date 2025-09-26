@@ -106,7 +106,10 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .btn{appearance:none;border:none;border-radius:12px;padding:14px 16px;font-weight:700;cursor:pointer}
 .btn.primary{background:var(--accent);color:#fff}
-.btn.secondary{background:#fff;border:1px solid #e5e7eb}
+.btn.secondary{background:#fff;border:1px solid #e5e7eb;color:var(--ink);}
+.btn.secondary:active{background:#f1f5f9}
+.btn.secondary:hover{background:#f8fafc}
+.btn.secondary:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .btn.ghost{background:transparent;border:1px dashed #cbd5e1}
 .btn.success{background:#16a34a;color:#fff}
 .hint{font-size:12px;color:var(--muted);margin-top:8px}
