@@ -67,29 +67,24 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 /* Page background: use a fixed pseudo-element as a fallback for iOS Safari */
-body{ margin:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial; color:var(--ink); background: var(--bg); position:relative;
-	  /* Respect iOS safe-area (notch / island) so top content is not covered.
-		  Use half the inset so the header doesn't add excessive space. */
-	  padding-top: calc(constant(safe-area-inset-top) / 2);
-	  padding-top: calc(env(safe-area-inset-top, 0px) / 2);
-	padding-bottom: constant(safe-area-inset-bottom);
-	padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+body{ margin:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial; color:var(--ink); background: var(--bg); position:relative; }
 body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-airport.jpg') no-repeat center/cover; background-size:cover; z-index:-1; -webkit-transform:translateZ(0); transform:translateZ(0); }
-.appbar{ position:sticky; top:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; background:var(--brand); box-sizing:border-box;
-		/* push appbar content below the notch/island; use half inset to reduce space */
-		padding-top: calc(constant(safe-area-inset-top) / 2);
-		padding-top: calc(env(safe-area-inset-top, 0px) / 2);
-		height: calc(56px + (constant(safe-area-inset-top) / 2));
-		height: calc(56px + (env(safe-area-inset-top, 0px) / 2));
+.appbar{ position:sticky; top:0; display:flex; align-items:center; justify-content:center; font-weight:700; box-sizing:border-box;
+	/* Transparent header so hero plane shows behind */
+	background: transparent; color:#06337a;
+	/* Fully respect top safe area inside the header */
+	padding-top: constant(safe-area-inset-top);
+	padding-top: env(safe-area-inset-top, 0px);
+	height: calc(56px + constant(safe-area-inset-top));
+	height: calc(56px + env(safe-area-inset-top, 0px));
 }
 .hero{
 	/* Title plane background */
 	background:#eaf3ff;
 	/* Pull hero upward so its background starts at the top pixel (behind header) */
 	margin-top: calc(-1 * var(--appbar-h));
-	/* Keep hero content visually below header and notch */
-	padding-top: calc(var(--appbar-h) + max(16px, env(safe-area-inset-top, 0px)));
+	/* Keep hero content visually below header; appbar height already includes safe-area */
+	padding-top: calc(var(--appbar-h) + 16px);
 	/* Taller hero for long screens; fallback to vh for wide support */
 	min-height: clamp(240px, 42vh, 520px);
 	display:flex; align-items:center; padding-left:16px; padding-right:16px;
@@ -140,8 +135,8 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 .summary .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .kpi{padding:14px;border-radius:14px;background:rgba(255,255,255,var(--background-opacity));box-shadow:var(--shadow)}
 .tabbar{position:fixed;left:0;right:0;background:#ffffff !important;border-top:1px solid #e5e7eb;display:flex;box-sizing:border-box;
-	/* lift tabbar above the home indicator and remove bottom white gap */
-	bottom: env(safe-area-inset-bottom, 0px);
+	/* anchor tabbar to the bottom, pad inside for the home indicator */
+	bottom: 0;
 	padding-bottom: env(safe-area-inset-bottom, 0px);
 	height: calc(64px + env(safe-area-inset-bottom, 0px));
 	z-index:30;
@@ -178,5 +173,5 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 }
 
 /* Keep main content above the tab bar and iOS home indicator */
-#views{ padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); }
+#views{ padding-bottom: var(--tabbar-h); }
 
