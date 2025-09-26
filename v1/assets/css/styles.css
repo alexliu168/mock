@@ -44,7 +44,7 @@
 /* Extracted styles from morningsir.html */
 .header-brand{font-size:18px}
 .header-sub{font-size:13px;opacity:.8}
-.header-logo{height:84px; display:block; width:auto; object-fit:contain}
+.header-logo{height:64px; display:block; width:auto; object-fit:contain}
 .card--pad{padding:16px}
 .h2--no-margin{margin:0 0 8px 0}
 .p--no-margin{margin:0}
@@ -85,9 +85,9 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 	/* Pull hero upward so its background starts at the top pixel (behind header) */
 	margin-top: calc(-1 * var(--appbar-h));
 	/* Keep hero content visually below header; appbar height already includes safe-area */
-	padding-top: calc(var(--appbar-h) + 16px);
-	/* Taller hero for long screens; fallback to vh for wide support */
-	min-height: clamp(240px, 42vh, 520px);
+	padding-top: calc(var(--appbar-h) + 12px);
+	/* More compact hero height using small viewport units on mobile */
+	min-height: clamp(180px, 30svh, 420px);
 	display:flex; align-items:center; padding-left:16px; padding-right:16px;
 	color:#06337a; font-weight:600; border-bottom:1px solid #e2e8f0;
 }
@@ -95,7 +95,7 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 /* Arrange header logo and subtitle horizontally */
 .hero > div{ display:flex; align-items:center; gap:14px; }
 
-.header-sub{ font-size:26px; opacity:.8; }
+.header-sub{ font-size:24px; opacity:.8; }
 .view{padding:16px} .card{background:rgba(255, 255, 255, var(--background-opacity)); border-radius:var(--radius); box-shadow:var(--shadow)}
 .list{display:grid; gap:12px}
 .course{ display:flex; gap:12px; align-items:center; padding:14px 16px; cursor:pointer; }
