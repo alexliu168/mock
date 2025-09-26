@@ -43,7 +43,7 @@ if (is_file(__DIR__ . '/lib/setup-sa.php')) { require_once __DIR__ . '/lib/setup
 
 // In-file toggle for saving uploaded audio. Set to true to enable by default.
 // You can still override per-request via POST save_audio=1/0
-$SAVE_AUDIO_DEFAULT = false;
+$SAVE_AUDIO_DEFAULT = true;
 
 // Threshold for marking a word as "low" (red highlight & weak word list). Centralized here.
 if (!defined('MS_LOW_WORD_THRESHOLD')) {

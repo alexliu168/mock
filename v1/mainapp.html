@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Morning SIR! — 服务用语训练 </title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=2" />
   <!-- Progressive Web App / iOS Home Screen -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -36,7 +36,7 @@
   </script>
 </head>
 <body class="root">
-  <header class="appbar">Morning SIR! — 服务用语训练 <span class="version-badge">V6</span></header>
+  <header class="appbar">Morning SIR! — 服务用语训练 <span class="version-badge">V8</span></header>
   <div class="hero">
     <div>
   <div class="header-brand"><img src="assets/img/logo_full.svg" alt="AVSECO" class="header-logo"/></div>
@@ -49,7 +49,7 @@
     <section id="home" class="view panel active">
       <div class="card card--pad">
   <h2 class="h2--no-margin">欢迎使用</h2>
-  <p class="muted p--no-margin">这是一个浏览器版演示应用：提供标准语音播放、录音与回放、AI 评分（发音/流利度）与中文详细解释。录音最长 15 秒，已适配 iOS/Android 主流浏览器（允许录音权限后即可使用）。</p>
+  <p class="muted p--no-margin">这是一个浏览器版：提供标准语音播放、录音与回放、AI 评分（发音/流利度）与中文详细解释。录音最长 15 秒，已适配 iOS/Android 主流浏览器（允许录音权限后即可使用）。</p>
         <div class="row row--mt">
           <button class="btn secondary" onclick="switchTab('practice')">前往练习</button>
           <button class="btn primary" onclick="alert('Morning SIR! H5\n\n• AI 评分 + 中文详细解释\n• 录音 ≤ 15 秒，支持回放')">关于本示范</button>
@@ -86,7 +86,8 @@
 
         <div id="result" class="result"></div>
         <div class="row row--mt-sm">
-          <button class="btn primary right" id="btnNext">下一张 →</button>
+          <button class="btn secondary" id="btnPrev" type="button">← 上一张</button>
+          <button class="btn primary right" id="btnNext" type="button">下一张 →</button>
         </div>
 
         <div id="summary" class="summary card summary--card">
@@ -179,7 +180,7 @@
         color: '#dcfce7',
         cover: 'assets/img/cover-greeting.jpg',
         phrases: [
-          { zh: '嗨', zh_tw: '嗨', en: 'Hello / Hi!', audio: 'df27849256656384bae75a1609088ca445ca2016.mp3' },
+          { zh: '嗨', en: 'Hello / Hi!', audio: 'df27849256656384bae75a1609088ca445ca2016.mp3' },
           { zh: '你好吗?', en: 'How are you?', audio: '3031897e282167593fbb4dbe81dc48ebbe9a002d.mp3' },
           { zh: '今天过得怎么样?', en: 'How are you today?', audio: 'f24d135c348d6a82968d3f06d5e26e6177b95cd8.mp3' },
           { zh: '早上好', en: 'Good morning.', audio: '5c3e9f7ad0c9c2b824bab5400d074c38f6d6cbe0.mp3' },
@@ -564,7 +565,23 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
 
 
     // ====== 初始化 ======
+    // Measure header/tabbar and expose heights via CSS variables for safe-area aware layout
+    function measureAndSetLayoutVars(){
+      try {
+        const root = document.documentElement;
+        const app = document.querySelector('.appbar');
+        const tab = document.querySelector('.tabbar');
+        const ah = app ? Math.round(app.getBoundingClientRect().height) : 56;
+        const th = tab ? Math.round(tab.getBoundingClientRect().height) : 64;
+        root.style.setProperty('--appbar-h', ah + 'px');
+        root.style.setProperty('--tabbar-h', th + 'px');
+      } catch(_) {}
+    }
     document.addEventListener('DOMContentLoaded', () => {
+      try { requestAnimationFrame(measureAndSetLayoutVars); } catch(_) { measureAndSetLayoutVars(); }
+      try { window.addEventListener('resize', measureAndSetLayoutVars); } catch(_) {}
+      try { window.addEventListener('orientationchange', measureAndSetLayoutVars); } catch(_) {}
+      try { window.visualViewport && window.visualViewport.addEventListener('resize', measureAndSetLayoutVars); } catch(_) {}
       // Custom tab wiring with special re-click logic for Practice tab
       Tabs.forEach(t => t.addEventListener('click', () => {
         const tabName = t.dataset.tab;
@@ -674,7 +691,7 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
   const fcZh = qs('#fcZh'); const fcEn = qs('#fcEn'); const chips = qs('#chips');
   const card = qs('#flashcard'); let touchX = null;
   const btnPlay = qs('#btnPlay'); const btnRecord = qs('#btnRecord');
-    const btnPlayback = qs('#btnPlayback'); const btnScore = qs('#btnScore'); const btnNext = qs('#btnNext');
+    const btnPlayback = qs('#btnPlayback'); const btnScore = qs('#btnScore'); const btnPrev = qs('#btnPrev'); const btnNext = qs('#btnNext');
   const resultBox = qs('#result');
   let mediaRecorder, recordedChunks = [], recordedBlob = null, recordedMimeType = '';
   let recordedUrl = '';
@@ -927,6 +944,8 @@ async function startRecording() {
   chips.innerHTML = '';
       counter.textContent = `${session.idx+1}/${total}`; progressBar.style.width = `${((session.idx)/total)*100}%`;
   clearResult(); disable([btnPlayback, btnScore]);
+  // manage prev button availability
+  try { if (btnPrev) btnPrev.disabled = (session.idx <= 0); } catch(_) {}
     }
 
     function endSession(){
@@ -1155,8 +1174,9 @@ async function onScoreClick(){
 }
 
 
-
-    btnNext.addEventListener('click', ()=>{ session.idx += 1; loadCard(); });
+  // navigate previous/next
+  btnPrev?.addEventListener('click', ()=>{ if (!session) return; if (session.idx > 0) { session.idx -= 1; loadCard(); } });
+  btnNext.addEventListener('click', ()=>{ session.idx += 1; loadCard(); });
 
   // 手勢
     card.addEventListener('touchstart', e=>{ touchX = e.changedTouches[0].clientX; },{passive:true});
