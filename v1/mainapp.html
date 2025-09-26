@@ -140,6 +140,14 @@
   </nav>
 
   <script>
+    // ====== 全局音频路径前缀 ======
+    const AUDIO_BASE = 'assets/audio/';
+    function resolveAudio(file){
+      if(!file) return '';
+      if(/^(?:https?:)?\/\//.test(file) || file.startsWith(AUDIO_BASE)) return file; // already absolute or prefixed
+      return AUDIO_BASE + file.replace(/^\/+/, '');
+    }
+    
     // ====== 課程資料（包含 AVSECO 基礎 10 句） ======
     const COURSES = [
       // ===== Course: Greetings =====
@@ -149,18 +157,18 @@
         color: '#dcfce7',
         cover: 'assets/img/cover-greeting.jpg',
         phrases: [
-          { zh: '嗨', zh_tw: '嗨', en: 'Hello / Hi!', audio: 'assets/audio/df27849256656384bae75a1609088ca445ca2016.mp3' },
-          { zh: '你好吗?', en: 'How are you?', audio: 'assets/audio/3031897e282167593fbb4dbe81dc48ebbe9a002d.mp3' },
-          { zh: '今天过得怎么样?', en: 'How are you today?', audio: 'assets/audio/f24d135c348d6a82968d3f06d5e26e6177b95cd8.mp3' },
-          { zh: '早上好', en: 'Good morning.', audio: 'assets/audio/5c3e9f7ad0c9c2b824bab5400d074c38f6d6cbe0.mp3' },
-          { zh: '下午好', en: 'Good afternoon.', audio: 'assets/audio/436f04733e77c6c81283567211c05f0750a71919.mp3' },
-          { zh: '晚上好', en: 'Good evening.', audio: 'assets/audio/462267e23cd806a5d570025547c896387d626d68.mp3' },
-          { zh: '很高兴认识你', en: 'Nice to meet you!', audio: 'assets/audio/55c5a325bc299849659780b31dae1882e924efff.mp3' },
-          { zh: '我很好,谢谢你!', en: "I'm fine, thank you.", audio: 'assets/audio/beac659eced816c9091692ece0fb1ba0b2e3d73d.mp3' },
-          { zh: '还不错,谢谢你!', en: 'Not too bad, thanks!', audio: 'assets/audio/68456c7db73f40cd6e5b7a48d8e69923e7495a76.mp3' },
-          { zh: '你好, 有什么可以帮忙吗?', en: 'Hello. How can I help?', audio: 'assets/audio/25938798839e25d93e9a6e746421fd617dc5684d.mp3' },
-          { zh: '欢迎来到香港', en: 'Welcome to Hong Kong', audio: 'assets/audio/a2e1291a40f08aff7f8bdccc7563a40adc09573b.mp3' },
-          { zh: '祝你有一个愉快的一日', en: 'Have a nice day', audio: 'assets/audio/b6bab9bc8870165ecb6c16e713339e4981432239.mp3' }
+          { zh: '嗨', zh_tw: '嗨', en: 'Hello / Hi!', audio: 'df27849256656384bae75a1609088ca445ca2016.mp3' },
+          { zh: '你好吗?', en: 'How are you?', audio: '3031897e282167593fbb4dbe81dc48ebbe9a002d.mp3' },
+          { zh: '今天过得怎么样?', en: 'How are you today?', audio: 'f24d135c348d6a82968d3f06d5e26e6177b95cd8.mp3' },
+          { zh: '早上好', en: 'Good morning.', audio: '5c3e9f7ad0c9c2b824bab5400d074c38f6d6cbe0.mp3' },
+          { zh: '下午好', en: 'Good afternoon.', audio: '436f04733e77c6c81283567211c05f0750a71919.mp3' },
+          { zh: '晚上好', en: 'Good evening.', audio: '462267e23cd806a5d570025547c896387d626d68.mp3' },
+          { zh: '很高兴认识你', en: 'Nice to meet you!', audio: '55c5a325bc299849659780b31dae1882e924efff.mp3' },
+          { zh: '我很好,谢谢你!', en: "I'm fine, thank you.", audio: 'beac659eced816c9091692ece0fb1ba0b2e3d73d.mp3' },
+          { zh: '还不错,谢谢你!', en: 'Not too bad, thanks!', audio: '68456c7db73f40cd6e5b7a48d8e69923e7495a76.mp3' },
+          { zh: '你好, 有什么可以帮忙吗?', en: 'Hello. How can I help?', audio: '25938798839e25d93e9a6e746421fd617dc5684d.mp3' },
+          { zh: '欢迎来到香港', en: 'Welcome to Hong Kong', audio: 'a2e1291a40f08aff7f8bdccc7563a40adc09573b.mp3' },
+          { zh: '祝你有一个愉快的一日', en: 'Have a nice day', audio: 'b6bab9bc8870165ecb6c16e713339e4981432239.mp3' }
         ]
       },
       // ===== New Course: Asking / Responding to Questions with... =====
@@ -170,11 +178,11 @@
         color: '#fde68a',
         cover: 'assets/img/cover-greeting.jpg', // placeholder cover (reuse greeting) – replace if a dedicated image is added
         phrases: [
-          { zh: '如何 (我如何到达…？)', en: 'How (i.e. How do I get to ...?)', audio: 'assets/audio/30a09d58e2a18781c9c877f36c286737a6948a15.mp3' },
-          { zh: '哪里（…在哪里？）', en: 'Where (i.e. Where is the ...?)', audio: 'assets/audio/6ffdad162e0588c5834a300b43f43f85c1c1495b.mp3' },
-          { zh: '什么时候（您什么时候返回香港？）', en: 'When (i.e. When will you return to Hong Kong?)', audio: 'assets/audio/e79f1a5549d12c7537fb4d284a16c6bee02bce35.mp3' },
-          { zh: '什么（现在几点？）', en: 'What (i.e. What time is it?)', audio: 'assets/audio/def9229b9ff9fcc834b91ae9598fd9efb6252602.mp3' },
-          { zh: '为什么（为什么我不能使用电子频道？）', en: "Why (i.e. Why can't I use the e-channel?)", audio: 'assets/audio/563c87590c3ec47ce8526817318210e5128a3897.mp3' }
+          { zh: '如何 (我如何到达…？)', en: 'How (i.e. How do I get to ...?)', audio: '30a09d58e2a18781c9c877f36c286737a6948a15.mp3' },
+          { zh: '哪里（…在哪里？）', en: 'Where (i.e. Where is the ...?)', audio: '6ffdad162e0588c5834a300b43f43f85c1c1495b.mp3' },
+          { zh: '什么时候（您什么时候返回香港？）', en: 'When (i.e. When will you return to Hong Kong?)', audio: 'e79f1a5549d12c7537fb4d284a16c6bee02bce35.mp3' },
+          { zh: '什么（现在几点？）', en: 'What (i.e. What time is it?)', audio: 'def9229b9ff9fcc834b91ae9598fd9efb6252602.mp3' },
+          { zh: '为什么（为什么我不能使用电子频道？）', en: "Why (i.e. Why can't I use the e-channel?)", audio: '563c87590c3ec47ce8526817318210e5128a3897.mp3' }
         ]
       },
       // ===== New Course: Days of the Week =====
@@ -184,16 +192,16 @@
         color: '#e0f2fe',
         cover: 'assets/img/cover-greeting.jpg', // reuse placeholder
         phrases: [
-          { zh: '星期一', en: 'Monday', audio: 'assets/audio/932eeb1076c85e522f02e15441fa371e3fd000ac.mp3' },
-          { zh: '星期二', en: 'Tuesday', audio: 'assets/audio/42e43b612a5dfae57ddf5929f0fb945ae83cbf61.mp3' },
-          { zh: '星期三', en: 'Wednesday', audio: 'assets/audio/5656b9b79b0316fc611a9c30d2ffac25228b8371.mp3' },
-          { zh: '星期四', en: 'Thursday', audio: 'assets/audio/76031ddf92450ba52c1e3945097079807a9065c2.mp3' },
-          { zh: '星期五', en: 'Friday', audio: 'assets/audio/d166e844a3f3f87149cc4f866eb998e9a751c72a.mp3' },
-          { zh: '星期六', en: 'Saturday', audio: 'assets/audio/17063c506b81a46c2eb7716af50cf19d4ed5a6c6.mp3' },
-          { zh: '星期日', en: 'Sunday', audio: 'assets/audio/bc5dd045b8623ddfc4bd0bce98ca5fda42accf88.mp3' },
-          { zh: '昨天', en: 'Yesterday', audio: 'assets/audio/da24830f1f7072d55862afb6969c1a4c433ac056.mp3' },
-          { zh: '今天', en: 'Today', audio: 'assets/audio/24345a14377fd821d3932f4e82f6431640955b0b.mp3' },
-          { zh: '明天', en: 'Tomorrow', audio: 'assets/audio/1948bf2dfa8fbc1f07ad3b6f0e2b3ee39f87e495.mp3' } // corrected spelling from Tommorow
+          { zh: '星期一', en: 'Monday', audio: '932eeb1076c85e522f02e15441fa371e3fd000ac.mp3' },
+          { zh: '星期二', en: 'Tuesday', audio: '42e43b612a5dfae57ddf5929f0fb945ae83cbf61.mp3' },
+          { zh: '星期三', en: 'Wednesday', audio: '5656b9b79b0316fc611a9c30d2ffac25228b8371.mp3' },
+          { zh: '星期四', en: 'Thursday', audio: '76031ddf92450ba52c1e3945097079807a9065c2.mp3' },
+          { zh: '星期五', en: 'Friday', audio: 'd166e844a3f3f87149cc4f866eb998e9a751c72a.mp3' },
+          { zh: '星期六', en: 'Saturday', audio: '17063c506b81a46c2eb7716af50cf19d4ed5a6c6.mp3' },
+          { zh: '星期日', en: 'Sunday', audio: 'bc5dd045b8623ddfc4bd0bce98ca5fda42accf88.mp3' },
+          { zh: '昨天', en: 'Yesterday', audio: 'da24830f1f7072d55862afb6969c1a4c433ac056.mp3' },
+          { zh: '今天', en: 'Today', audio: '24345a14377fd821d3932f4e82f6431640955b0b.mp3' },
+          { zh: '明天', en: 'Tomorrow', audio: '1948bf2dfa8fbc1f07ad3b6f0e2b3ee39f87e495.mp3' } // corrected spelling from Tommorow
         ]
       },
       // ===== Split Course: Direction Guide - Directions =====
@@ -203,28 +211,28 @@
         color: '#a5f3fc',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '转左', en: 'Turn left', audio: 'assets/audio/920999160e9ea084f372a97bda31da797ba9923a.mp3' },
-          { zh: '转右', en: 'Turn right', audio: 'assets/audio/39fa445c175d0e6ab6479f9ab155502210b1d0ce.mp3' },
-          { zh: '直行', en: 'Go straight', audio: 'assets/audio/cd77124e8ae5fda2f9699e0028c3bca60eca892f.mp3' },
-          { zh: '继续走', en: 'Keep going', audio: 'assets/audio/6902b083a9c13fe725148faed9ceee2277e3ac01.mp3' },
-          { zh: '上楼', en: 'Go upstairs', audio: 'assets/audio/f5986810a4326f9c556ab810b5beed5a83549fc4.mp3' },
-          { zh: '下楼', en: 'Go downstairs', audio: 'assets/audio/62fee0041bcfab8e3e3d7ce25c49162a339de4ee.mp3' },
-          { zh: '楼梯', en: 'Staircase', audio: 'assets/audio/15ccb289ff73c15c072868cbc16ca91887182752.mp3' },
-          { zh: '电梯/升降机', en: 'Elevator / Lift', audio: 'assets/audio/f4f99e3566b6888169ac527ad9ef22b9f88f6488.mp3' },
-          { zh: '扶手电梯', en: 'Escalator', audio: 'assets/audio/5d4ea9cc2b76157bb20e2ce2187c131a0288732c.mp3' },
-          { zh: '旁边', en: 'Next to', audio: 'assets/audio/1fc33fc3896a92e77bf2ecd29fb7f0f37d1ae3a3.mp3' },
-          { zh: '后面', en: 'Behind', audio: 'assets/audio/8dd3ec3d963acb22ced18b20b48d12e8ff152776.mp3' },
-          { zh: '对面', en: 'Across from', audio: 'assets/audio/740740ac02457d8cd56bb062d51074099b22c174.mp3' },
-          { zh: '之间', en: 'Between', audio: 'assets/audio/1b22feb0c0c13c69ebe6389111ff7312bd0c946b.mp3' },
-          { zh: '近≠远', en: 'Near / Far', audio: 'assets/audio/84096183d889cd36f7a0c225987e0dde4027219b.mp3' },
-          { zh: '经过', en: 'Pass', audio: 'assets/audio/d7cd56f2a2a3f47830760edfb89946eb7b9e2cd1.mp3' },
-          { zh: '通过', en: 'Go through', audio: 'assets/audio/7b4710b680df9dac4feebf5a0bfcdbbf9bef216e.mp3' },
-          { zh: '靠（左/右）侧', en: 'Keep to (left / right) side', audio: 'assets/audio/2ed8fb8f1e0be2d4d9b74772dfa41a9af5844afe.mp3' },
-          { zh: '在 (左/右)边', en: 'On (left / right) side', audio: 'assets/audio/43981986538d5ae753c80dfc1012ab36cb966e16.mp3' },
-          { zh: '朝 _________ 方向前进', en: 'Heading towards _________ direction', audio: 'assets/audio/58a86ab5b09d7ee2bcd591892018de54da85590b.mp3' },
-          { zh: '我怎么去 ________________？', en: 'How do I get to ________________?', audio: 'assets/audio/03dd113c931f6221ff8006f767822a21ad8866e9.mp3' },
-          { zh: '__________ 在哪里？', en: 'Where is the __________?', audio: 'assets/audio/9af68f22a14fa55b8437d2ea2091c1c1a33eac17.mp3' },
-          { zh: '这附近有 ________ 吗？', en: 'Is there a ________ near here?', audio: 'assets/audio/c766de4af0b1b4239cfaaa0897587b7de236ac72.mp3' }
+          { zh: '转左', en: 'Turn left', audio: '920999160e9ea084f372a97bda31da797ba9923a.mp3' },
+          { zh: '转右', en: 'Turn right', audio: '39fa445c175d0e6ab6479f9ab155502210b1d0ce.mp3' },
+          { zh: '直行', en: 'Go straight', audio: 'cd77124e8ae5fda2f9699e0028c3bca60eca892f.mp3' },
+          { zh: '继续走', en: 'Keep going', audio: '6902b083a9c13fe725148faed9ceee2277e3ac01.mp3' },
+          { zh: '上楼', en: 'Go upstairs', audio: 'f5986810a4326f9c556ab810b5beed5a83549fc4.mp3' },
+          { zh: '下楼', en: 'Go downstairs', audio: '62fee0041bcfab8e3e3d7ce25c49162a339de4ee.mp3' },
+          { zh: '楼梯', en: 'Staircase', audio: '15ccb289ff73c15c072868cbc16ca91887182752.mp3' },
+          { zh: '电梯/升降机', en: 'Elevator / Lift', audio: 'f4f99e3566b6888169ac527ad9ef22b9f88f6488.mp3' },
+          { zh: '扶手电梯', en: 'Escalator', audio: '5d4ea9cc2b76157bb20e2ce2187c131a0288732c.mp3' },
+          { zh: '旁边', en: 'Next to', audio: '1fc33fc3896a92e77bf2ecd29fb7f0f37d1ae3a3.mp3' },
+          { zh: '后面', en: 'Behind', audio: '8dd3ec3d963acb22ced18b20b48d12e8ff152776.mp3' },
+          { zh: '对面', en: 'Across from', audio: '740740ac02457d8cd56bb062d51074099b22c174.mp3' },
+          { zh: '之间', en: 'Between', audio: '1b22feb0c0c13c69ebe6389111ff7312bd0c946b.mp3' },
+          { zh: '近≠远', en: 'Near / Far', audio: '84096183d889cd36f7a0c225987e0dde4027219b.mp3' },
+          { zh: '经过', en: 'Pass', audio: 'd7cd56f2a2a3f47830760edfb89946eb7b9e2cd1.mp3' },
+          { zh: '通过', en: 'Go through', audio: '7b4710b680df9dac4feebf5a0bfcdbbf9bef216e.mp3' },
+          { zh: '靠（左/右）侧', en: 'Keep to (left / right) side', audio: '2ed8fb8f1e0be2d4d9b74772dfa41a9af5844afe.mp3' },
+          { zh: '在 (左/右)边', en: 'On (left / right) side', audio: '43981986538d5ae753c80dfc1012ab36cb966e16.mp3' },
+          { zh: '朝 _________ 方向前进', en: 'Heading towards _________ direction', audio: '58a86ab5b09d7ee2bcd591892018de54da85590b.mp3' },
+          { zh: '我怎么去 ________________？', en: 'How do I get to ________________?', audio: '03dd113c931f6221ff8006f767822a21ad8866e9.mp3' },
+          { zh: '__________ 在哪里？', en: 'Where is the __________?', audio: '9af68f22a14fa55b8437d2ea2091c1c1a33eac17.mp3' },
+          { zh: '这附近有 ________ 吗？', en: 'Is there a ________ near here?', audio: 'c766de4af0b1b4239cfaaa0897587b7de236ac72.mp3' }
         ]
       },
       // ===== Split Course: Direction Guide - Facilities =====
@@ -234,28 +242,28 @@
         color: '#cffafe',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '餐厅', en: 'Restaurant / Food court', audio: 'assets/audio/05871b8de523abc9d062ad34328eddc9e46abd19.mp3' },
-          { zh: '询问处', en: 'Information desk', audio: 'assets/audio/d02f01116f2a9346ccef13a7d9e3921c5ae8c98a.mp3' },
-          { zh: '登机办理处', en: 'Check-in counter', audio: 'assets/audio/e596244d65bca1e4ad997d85134aed2e72e6e3c8.mp3' },
-          { zh: '安检', en: 'Security check', audio: 'assets/audio/daa2684691dd1c32132f2006aa810f54e6670d4e.mp3' },
-          { zh: '转机安检站', en: 'Transfer checkpoint', audio: 'assets/audio/8957e3683226ae3cd6621daf0804bcd8376a5391.mp3' },
-          { zh: '离境', en: 'Departure', audio: 'assets/audio/0a9a13d7407d98a132bc64ac70698123817675c3.mp3' },
-          { zh: '抵达', en: 'Arrival', audio: 'assets/audio/dc21d2b4eede6e5dd86091471b205b4b6fecd76a.mp3' },
-          { zh: '登机闸口', en: 'Gate', audio: 'assets/audio/5701b5f6feaa9aaae618dd553adc29893963cc1a.mp3' },
-          { zh: '登机证', en: 'Boarding pass', audio: 'assets/audio/c16dd8a6f9a78a0f534512a6b978ba0e9b864b37.mp3' },
-          { zh: '护照', en: 'Passport', audio: 'assets/audio/d5ed1ca0e30841762087801ad0ea2356bf068bd4.mp3' },
-          { zh: '吸烟区', en: 'Smoking area', audio: 'assets/audio/53fc7f4cd0c79850a7a085830ad275ff4715533e.mp3' },
-          { zh: '入境', en: 'Immigration', audio: 'assets/audio/061873e7aac53da2292fa599c17e00b2657c27f9.mp3' },
-          { zh: '海关', en: 'Customs', audio: 'assets/audio/22c43c80b6acba6c8e988834746cb3dad10dc13a.mp3' },
-          { zh: '行李', en: 'Baggage', audio: 'assets/audio/84d720460886864c17b29e5c55ef2b6ecf65c2f9.mp3' },
-          { zh: '天际走廊', en: 'Skybridge', audio: 'assets/audio/ad6a6d4f66e00aab3582976b8fc34402ba756ed3.mp3' },
-          { zh: '空中花园', en: 'Skygarden', audio: 'assets/audio/17f127ae7d24e70a19a932ee68eb6b3604293525.mp3' },
-          { zh: '洗手间', en: 'Toilet / Restroom / WC', audio: 'assets/audio/46b5726a903d265f4897e71f027e2d745726c498.mp3' },
-          { zh: '免税店', en: 'Duty-free shops', audio: 'assets/audio/6247020386542e25c935fc12dfb772364e517ffd.mp3' },
-          { zh: '咖啡店', en: 'Coffee shop', audio: 'assets/audio/a65560eef6929169012f77afb67122f291e1ab9c.mp3' },
-          { zh: '饮用水 / 补充水 站', en: 'Drinking water / Refill water spot / Water zone', audio: 'assets/audio/1816e23ed5450a4297ee547446da135fd55806ff.mp3' },
-          { zh: '旅客捷运系统', en: 'Automated people mover (APM)', audio: 'assets/audio/1d02f962a47fa71ffc7a979c458a450ef4d583a7.mp3' },
-          { zh: '接驳列车 / 接驳巴士', en: 'Shuttle train / bus', audio: 'assets/audio/bfb58fb517728b76446051bfa7074734de4b95bb.mp3' }
+          { zh: '餐厅', en: 'Restaurant / Food court', audio: '05871b8de523abc9d062ad34328eddc9e46abd19.mp3' },
+          { zh: '询问处', en: 'Information desk', audio: 'd02f01116f2a9346ccef13a7d9e3921c5ae8c98a.mp3' },
+          { zh: '登机办理处', en: 'Check-in counter', audio: 'e596244d65bca1e4ad997d85134aed2e72e6e3c8.mp3' },
+          { zh: '安检', en: 'Security check', audio: 'daa2684691dd1c32132f2006aa810f54e6670d4e.mp3' },
+          { zh: '转机安检站', en: 'Transfer checkpoint', audio: '8957e3683226ae3cd6621daf0804bcd8376a5391.mp3' },
+          { zh: '离境', en: 'Departure', audio: '0a9a13d7407d98a132bc64ac70698123817675c3.mp3' },
+          { zh: '抵达', en: 'Arrival', audio: 'dc21d2b4eede6e5dd86091471b205b4b6fecd76a.mp3' },
+          { zh: '登机闸口', en: 'Gate', audio: '5701b5f6feaa9aaae618dd553adc29893963cc1a.mp3' },
+          { zh: '登机证', en: 'Boarding pass', audio: 'c16dd8a6f9a78a0f534512a6b978ba0e9b864b37.mp3' },
+          { zh: '护照', en: 'Passport', audio: 'd5ed1ca0e30841762087801ad0ea2356bf068bd4.mp3' },
+          { zh: '吸烟区', en: 'Smoking area', audio: '53fc7f4cd0c79850a7a085830ad275ff4715533e.mp3' },
+          { zh: '入境', en: 'Immigration', audio: '061873e7aac53da2292fa599c17e00b2657c27f9.mp3' },
+          { zh: '海关', en: 'Customs', audio: '22c43c80b6acba6c8e988834746cb3dad10dc13a.mp3' },
+          { zh: '行李', en: 'Baggage', audio: '84d720460886864c17b29e5c55ef2b6ecf65c2f9.mp3' },
+          { zh: '天际走廊', en: 'Skybridge', audio: 'ad6a6d4f66e00aab3582976b8fc34402ba756ed3.mp3' },
+          { zh: '空中花园', en: 'Skygarden', audio: '17f127ae7d24e70a19a932ee68eb6b3604293525.mp3' },
+          { zh: '洗手间', en: 'Toilet / Restroom / WC', audio: '46b5726a903d265f4897e71f027e2d745726c498.mp3' },
+          { zh: '免税店', en: 'Duty-free shops', audio: '6247020386542e25c935fc12dfb772364e517ffd.mp3' },
+          { zh: '咖啡店', en: 'Coffee shop', audio: 'a65560eef6929169012f77afb67122f291e1ab9c.mp3' },
+          { zh: '饮用水 / 补充水 站', en: 'Drinking water / Refill water spot / Water zone', audio: '1816e23ed5450a4297ee547446da135fd55806ff.mp3' },
+          { zh: '旅客捷运系统', en: 'Automated people mover (APM)', audio: '1d02f962a47fa71ffc7a979c458a450ef4d583a7.mp3' },
+          { zh: '接驳列车 / 接驳巴士', en: 'Shuttle train / bus', audio: 'bfb58fb517728b76446051bfa7074734de4b95bb.mp3' }
         ]
       },
       // ===== New Course: Numbers =====
@@ -265,36 +273,36 @@
         color: '#fde047',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '1', en: 'One', audio: 'assets/audio/b58b5a8ced9db48b30e008b148004c1065ce53b1.mp3' },
-          { zh: '2', en: 'Two', audio: 'assets/audio/16e018ece5a1d3b750531de58d16b961de23d629.mp3' },
-          { zh: '3', en: 'Three', audio: 'assets/audio/f3cd4632fcbc2f87e24127e107068b28ca4b8862.mp3' },
-          { zh: '4', en: 'Four', audio: 'assets/audio/c5d87b23f24ed0de795c83cc3a260e8ee53e8e96.mp3' },
-          { zh: '5', en: 'Five', audio: 'assets/audio/f8ed82841b9b517e3ff177a45191feb4d0d44404.mp3' },
-          { zh: '6', en: 'Six', audio: 'assets/audio/b10d6634633e094c200b7e34d8a2a5b113aa672d.mp3' },
-          { zh: '7', en: 'Seven', audio: 'assets/audio/63abb5650ff592fc4e4ddbac60437510594a3f21.mp3' },
-          { zh: '8', en: 'Eight', audio: 'assets/audio/20c26c702a685c517e9c11eec1635199fead87b3.mp3' },
-          { zh: '9', en: 'Nine', audio: 'assets/audio/535bb8d4292925f56cdaf3313eff834e515dd971.mp3' },
-          { zh: '10', en: 'Ten', audio: 'assets/audio/83173a1aa745fdc8faff4cff717d9df1257b7c94.mp3' },
-          { zh: '11', en: 'Eleven', audio: 'assets/audio/b4a1b960f53db2f23b46796c12056a591eb0a724.mp3' },
-          { zh: '12', en: 'Twelve', audio: 'assets/audio/f14bcf9b919fc82492e8ad5859dc8aa196f600be.mp3' },
-          { zh: '13', en: 'Thirteen', audio: 'assets/audio/7933258ec6036a4126be12b23cbd15723172492f.mp3' },
-          { zh: '14', en: 'Fourteen', audio: 'assets/audio/55d9600679c08f255546c5fb47c6b360496a8a6d.mp3' },
-          { zh: '15', en: 'Fifteen', audio: 'assets/audio/a20dd5f284e5b31a96f186bae6e5e20e0c1c2ca6.mp3' },
-          { zh: '16', en: 'Sixteen', audio: 'assets/audio/262ca2b5696b3390d4bf6482f0bd7e6a401a5f00.mp3' },
-          { zh: '17', en: 'Seventeen', audio: 'assets/audio/39e498a0910939dc0f6eab4a45242f97a09d2d49.mp3' },
-          { zh: '18', en: 'Eighteen', audio: 'assets/audio/10d7b30d66b56ea44ff0ac85476eb6d8f3b1e38a.mp3' },
-          { zh: '19', en: 'Nineteen', audio: 'assets/audio/8e59618dd8cf0bd30b020208a78674c2e8b2a77c.mp3' },
-          { zh: '20', en: 'Twenty', audio: 'assets/audio/ed0434fcc20c5b7e358223ba70111fc1ccfdc9e5.mp3' },
-          { zh: '30', en: 'Thirty', audio: 'assets/audio/f57a4f849a3dd86651b8be838f1b4aad6fb2a5ea.mp3' },
-          { zh: '40', en: 'Forty', audio: 'assets/audio/0ec7f550c108e1f62ee6c75c75bf1be5feffa893.mp3' },
-          { zh: '50', en: 'Fifty', audio: 'assets/audio/812852df341909dd856722be95f03b3851bcd471.mp3' },
-          { zh: '60', en: 'Sixty', audio: 'assets/audio/00a0861c1ff50340fbf7526907d1044854648eae.mp3' },
-          { zh: '70', en: 'Seventy', audio: 'assets/audio/a666f058cd8ebbab03349defdddf1191dd7b5768.mp3' },
-          { zh: '80', en: 'Eighty', audio: 'assets/audio/a6435a5f1a17793237f5664c6b807743959b6d8c.mp3' },
-          { zh: '90', en: 'Ninety', audio: 'assets/audio/6d1b0bc8d2c11969c72da95b8fd4074a7ce6e6e9.mp3' },
-          { zh: '100', en: 'One hundred', audio: 'assets/audio/0e6e78d65739299428bfe1b768fa059f6a189822.mp3' },
-          { zh: '1,000', en: 'One thousand', audio: 'assets/audio/728bed68062a366bff66020c1b37bd1e9facfef2.mp3' },
-          { zh: '10,000', en: 'Ten thousand', audio: 'assets/audio/c6a46fc274a766372b3740ed12a0fc0dd7c72c35.mp3' }
+          { zh: '1', en: 'One', audio: 'b58b5a8ced9db48b30e008b148004c1065ce53b1.mp3' },
+          { zh: '2', en: 'Two', audio: '16e018ece5a1d3b750531de58d16b961de23d629.mp3' },
+          { zh: '3', en: 'Three', audio: 'f3cd4632fcbc2f87e24127e107068b28ca4b8862.mp3' },
+          { zh: '4', en: 'Four', audio: 'c5d87b23f24ed0de795c83cc3a260e8ee53e8e96.mp3' },
+          { zh: '5', en: 'Five', audio: 'f8ed82841b9b517e3ff177a45191feb4d0d44404.mp3' },
+          { zh: '6', en: 'Six', audio: 'b10d6634633e094c200b7e34d8a2a5b113aa672d.mp3' },
+          { zh: '7', en: 'Seven', audio: '63abb5650ff592fc4e4ddbac60437510594a3f21.mp3' },
+          { zh: '8', en: 'Eight', audio: '20c26c702a685c517e9c11eec1635199fead87b3.mp3' },
+          { zh: '9', en: 'Nine', audio: '535bb8d4292925f56cdaf3313eff834e515dd971.mp3' },
+          { zh: '10', en: 'Ten', audio: '83173a1aa745fdc8faff4cff717d9df1257b7c94.mp3' },
+          { zh: '11', en: 'Eleven', audio: 'b4a1b960f53db2f23b46796c12056a591eb0a724.mp3' },
+          { zh: '12', en: 'Twelve', audio: 'f14bcf9b919fc82492e8ad5859dc8aa196f600be.mp3' },
+          { zh: '13', en: 'Thirteen', audio: '7933258ec6036a4126be12b23cbd15723172492f.mp3' },
+          { zh: '14', en: 'Fourteen', audio: '55d9600679c08f255546c5fb47c6b360496a8a6d.mp3' },
+          { zh: '15', en: 'Fifteen', audio: 'a20dd5f284e5b31a96f186bae6e5e20e0c1c2ca6.mp3' },
+          { zh: '16', en: 'Sixteen', audio: '262ca2b5696b3390d4bf6482f0bd7e6a401a5f00.mp3' },
+          { zh: '17', en: 'Seventeen', audio: '39e498a0910939dc0f6eab4a45242f97a09d2d49.mp3' },
+          { zh: '18', en: 'Eighteen', audio: '10d7b30d66b56ea44ff0ac85476eb6d8f3b1e38a.mp3' },
+          { zh: '19', en: 'Nineteen', audio: '8e59618dd8cf0bd30b020208a78674c2e8b2a77c.mp3' },
+          { zh: '20', en: 'Twenty', audio: 'ed0434fcc20c5b7e358223ba70111fc1ccfdc9e5.mp3' },
+          { zh: '30', en: 'Thirty', audio: 'f57a4f849a3dd86651b8be838f1b4aad6fb2a5ea.mp3' },
+          { zh: '40', en: 'Forty', audio: '0ec7f550c108e1f62ee6c75c75bf1be5feffa893.mp3' },
+          { zh: '50', en: 'Fifty', audio: '812852df341909dd856722be95f03b3851bcd471.mp3' },
+          { zh: '60', en: 'Sixty', audio: '00a0861c1ff50340fbf7526907d1044854648eae.mp3' },
+          { zh: '70', en: 'Seventy', audio: 'a666f058cd8ebbab03349defdddf1191dd7b5768.mp3' },
+          { zh: '80', en: 'Eighty', audio: 'a6435a5f1a17793237f5664c6b807743959b6d8c.mp3' },
+          { zh: '90', en: 'Ninety', audio: '6d1b0bc8d2c11969c72da95b8fd4074a7ce6e6e9.mp3' },
+          { zh: '100', en: 'One hundred', audio: '0e6e78d65739299428bfe1b768fa059f6a189822.mp3' },
+          { zh: '1,000', en: 'One thousand', audio: '728bed68062a366bff66020c1b37bd1e9facfef2.mp3' },
+          { zh: '10,000', en: 'Ten thousand', audio: 'c6a46fc274a766372b3740ed12a0fc0dd7c72c35.mp3' }
         ]
       },
       // ===== New Course: Passenger Screening =====
@@ -304,34 +312,34 @@
         color: '#ddd6fe',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '请排队', en: 'Please line-up / queue up.', audio: 'assets/audio/8a263f9333c210a802b2b91f7a1a9070d03d207f.mp3' },
-          { zh: '请向前/向后走。', en: 'Please step forward / backward.', audio: 'assets/audio/a23017447cc100933ed347307c94aed6b75f75ae.mp3' },
-          { zh: '请用左/右方位置', en: 'Please use the left / right position.', audio: 'assets/audio/359d904f3d1ee2e51c94e1c42a39a5857485f40a.mp3' },
-          { zh: '请取托盘', en: 'Please take the tray.', audio: 'assets/audio/d018110a9f3422578cb71e8127cdc3387c7756f5.mp3' },
-          { zh: '请将所有物品放入托盘。', en: 'Please put all items in the tray.', audio: 'assets/audio/21769eb7f642154715a1f34251c1b322999cad98.mp3' },
-          { zh: '请将所有行李放入托盘。', en: 'Please put all baggages / luggages in the tray.', audio: 'assets/audio/02a72e0ad14bb62fd454820b9f6745f417e0a732.mp3' },
-          { zh: '请将电脑/平板电脑取出，并放置在其他托盘中。', en: 'Please take out your computer / tablet, and place it in another tray.', audio: 'assets/audio/ccbb7906579c92ac92ffa17d9e05cba5a4c734da.mp3' },
-          { zh: '无需将电脑/平板电脑从包中取出。', en: 'No need to take the computer / tablet out of the bag.', audio: 'assets/audio/2a835d8546a3b131e1b57b7752611e6d60ddc215.mp3' },
-          { zh: '请稍等', en: 'Please wait / hold on / wait a moment.', audio: 'assets/audio/d1a2e7401c37372ca5a6964de97c3f82bbb3383e.mp3' },
-          { zh: '请脱下您的帽子', en: 'Please take off your hat.', audio: 'assets/audio/a08426635d040f7fc8951105d66f19494a8ccad4.mp3' },
-          { zh: '我可以看一下您的登机证吗？', en: 'May I see your boarding pass please?', audio: 'assets/audio/cb8b241ff64c272a5549a4b5bcca28bebd131234.mp3' },
-          { zh: '您的航班号是什么？', en: 'What is your flight number?', audio: 'assets/audio/858053a456a8e6294695d38fab9a48e73e1b8772.mp3' },
-          { zh: '请一个接一个地通过。', en: 'Please go through one by one.', audio: 'assets/audio/3875be3536992bba7a2e71e784e1d5a98f2f060d.mp3' },
-          { zh: '请从口袋里取出所有物品并放入此托盘中。', en: 'Please take out all the items from your pockets and put them in this tray.', audio: 'assets/audio/8ca74a1438210fe6c13f6fce0d136a2f6382bb0a.mp3' },
-          { zh: '请站在这个脚印上，按照这个标志，张开你的双臂。', en: 'Please stand on this footprint, follow this sign and spread out your arms.', audio: 'assets/audio/7259510dd6e406940a807e10d977cd41732981c0.mp3' },
-          { zh: '我们现在将进行人手检查。', en: 'We will now do a pat-down search.', audio: 'assets/audio/959e86fd4fdf35938eb1f94d02de12e59586d5ed.mp3' },
-          { zh: '这是一个随机检查', en: 'This is a random search.', audio: 'assets/audio/610d9d164363b67ccd24d1dd737f105f0cc695f8.mp3' },
-          { zh: '这个包 / 行李需要开包检查', en: 'This bag / luggage will have to be open checked.', audio: 'assets/audio/09021df5de300d9a9367c8e1e20e18ca46b29b4f.mp3' },
-          { zh: '您还有其他的行李吗？', en: 'Do you have other bags?', audio: 'assets/audio/c5d87ea5d8d52e065b0c7fb793da714ab4607f6e.mp3' },
-          { zh: '您可以在安检后到饮水站补充水。', en: 'You can refill water at the water station after the security check.', audio: 'assets/audio/62af2618e8e49a8257ec4fa65176f846e3956570.mp3' },
-          { zh: '请清空瓶子/容器。', en: 'Please empty the bottle / container.', audio: 'assets/audio/e7fdc8ffa9e9d83cc9640c55904951ed1a0df568.mp3' },
-          { zh: '随身行李中不允许携带超过 100 毫升的液体/水/饮料。', en: 'Liquids / water / soft drinks over 100 ml are not allowed in carry-on baggage.', audio: 'assets/audio/0093043ef21489979d7da9520f3389e52a97cf5f.mp3' },
-          { zh: '出于安全原因，此物品不能带上飞机。', en: 'For safety reasons, this cannot be taken on-board.', audio: 'assets/audio/5046080c52a6ae366fb99a0f73d22b068c9ad3bf.mp3' },
-          { zh: '这物品属于限制物品', en: 'This is a restricted article.', audio: 'assets/audio/716df560206ebb7f8eba625cfae58771741df120.mp3' },
-          { zh: '请稍等，我们需要联系您的航空公司', en: 'Please wait, we need to contact your airline.', audio: 'assets/audio/54c3c02ae398c87b661e0a08659b7a9350c7a529.mp3' },
-          { zh: '请问您会在 14 天内返回香港吗？', en: 'Will you be returning to Hong Kong within 14 days?', audio: 'assets/audio/8c024a6a4f9db024e9bb775856e81f22e38286fe.mp3' },
-          { zh: '我们将为您的物品发出一张财产收据，您可以在 14 天内前往航空公司办公室领回物品。', en: "We will issue a property receipt for your item(s), and you can collect the item(s) at the airline's office within 14 days.", audio: 'assets/audio/5009cb36ef45dc0651d91cc212117864f33ac7e0.mp3' },
-          { zh: '您可以选择将其弃置', en: 'You may choose to dispose it.', audio: 'assets/audio/f6e5e352378a5251d682a6198f34da112b590714.mp3' }
+          { zh: '请排队', en: 'Please line-up / queue up.', audio: '8a263f9333c210a802b2b91f7a1a9070d03d207f.mp3' },
+          { zh: '请向前/向后走。', en: 'Please step forward / backward.', audio: 'a23017447cc100933ed347307c94aed6b75f75ae.mp3' },
+          { zh: '请用左/右方位置', en: 'Please use the left / right position.', audio: '359d904f3d1ee2e51c94e1c42a39a5857485f40a.mp3' },
+          { zh: '请取托盘', en: 'Please take the tray.', audio: 'd018110a9f3422578cb71e8127cdc3387c7756f5.mp3' },
+          { zh: '请将所有物品放入托盘。', en: 'Please put all items in the tray.', audio: '21769eb7f642154715a1f34251c1b322999cad98.mp3' },
+          { zh: '请将所有行李放入托盘。', en: 'Please put all baggages / luggages in the tray.', audio: '02a72e0ad14bb62fd454820b9f6745f417e0a732.mp3' },
+          { zh: '请将电脑/平板电脑取出，并放置在其他托盘中。', en: 'Please take out your computer / tablet, and place it in another tray.', audio: 'ccbb7906579c92ac92ffa17d9e05cba5a4c734da.mp3' },
+          { zh: '无需将电脑/平板电脑从包中取出。', en: 'No need to take the computer / tablet out of the bag.', audio: '2a835d8546a3b131e1b57b7752611e6d60ddc215.mp3' },
+          { zh: '请稍等', en: 'Please wait / hold on / wait a moment.', audio: 'd1a2e7401c37372ca5a6964de97c3f82bbb3383e.mp3' },
+          { zh: '请脱下您的帽子', en: 'Please take off your hat.', audio: 'a08426635d040f7fc8951105d66f19494a8ccad4.mp3' },
+          { zh: '我可以看一下您的登机证吗？', en: 'May I see your boarding pass please?', audio: 'cb8b241ff64c272a5549a4b5bcca28bebd131234.mp3' },
+          { zh: '您的航班号是什么？', en: 'What is your flight number?', audio: '858053a456a8e6294695d38fab9a48e73e1b8772.mp3' },
+          { zh: '请一个接一个地通过。', en: 'Please go through one by one.', audio: '3875be3536992bba7a2e71e784e1d5a98f2f060d.mp3' },
+          { zh: '请从口袋里取出所有物品并放入此托盘中。', en: 'Please take out all the items from your pockets and put them in this tray.', audio: '8ca74a1438210fe6c13f6fce0d136a2f6382bb0a.mp3' },
+          { zh: '请站在这个脚印上，按照这个标志，张开你的双臂。', en: 'Please stand on this footprint, follow this sign and spread out your arms.', audio: '7259510dd6e406940a807e10d977cd41732981c0.mp3' },
+          { zh: '我们现在将进行人手检查。', en: 'We will now do a pat-down search.', audio: '959e86fd4fdf35938eb1f94d02de12e59586d5ed.mp3' },
+          { zh: '这是一个随机检查', en: 'This is a random search.', audio: '610d9d164363b67ccd24d1dd737f105f0cc695f8.mp3' },
+          { zh: '这个包 / 行李需要开包检查', en: 'This bag / luggage will have to be open checked.', audio: '09021df5de300d9a9367c8e1e20e18ca46b29b4f.mp3' },
+          { zh: '您还有其他的行李吗？', en: 'Do you have other bags?', audio: 'c5d87ea5d8d52e065b0c7fb793da714ab4607f6e.mp3' },
+          { zh: '您可以在安检后到饮水站补充水。', en: 'You can refill water at the water station after the security check.', audio: '62af2618e8e49a8257ec4fa65176f846e3956570.mp3' },
+          { zh: '请清空瓶子/容器。', en: 'Please empty the bottle / container.', audio: 'e7fdc8ffa9e9d83cc9640c55904951ed1a0df568.mp3' },
+          { zh: '随身行李中不允许携带超过 100 毫升的液体/水/饮料。', en: 'Liquids / water / soft drinks over 100 ml are not allowed in carry-on baggage.', audio: '0093043ef21489979d7da9520f3389e52a97cf5f.mp3' },
+          { zh: '出于安全原因，此物品不能带上飞机。', en: 'For safety reasons, this cannot be taken on-board.', audio: '5046080c52a6ae366fb99a0f73d22b068c9ad3bf.mp3' },
+          { zh: '这物品属于限制物品', en: 'This is a restricted article.', audio: '716df560206ebb7f8eba625cfae58771741df120.mp3' },
+          { zh: '请稍等，我们需要联系您的航空公司', en: 'Please wait, we need to contact your airline.', audio: '54c3c02ae398c87b661e0a08659b7a9350c7a529.mp3' },
+          { zh: '请问您会在 14 天内返回香港吗？', en: 'Will you be returning to Hong Kong within 14 days?', audio: '8c024a6a4f9db024e9bb775856e81f22e38286fe.mp3' },
+          { zh: '我们将为您的物品发出一张财产收据，您可以在 14 天内前往航空公司办公室领回物品。', en: "We will issue a property receipt for your item(s), and you can collect the item(s) at the airline's office within 14 days.", audio: '5009cb36ef45dc0651d91cc212117864f33ac7e0.mp3' },
+          { zh: '您可以选择将其弃置', en: 'You may choose to dispose it.', audio: 'f6e5e352378a5251d682a6198f34da112b590714.mp3' }
         ]
       },
       // ===== New Course: TAD E-Gates / Assisted Channel =====
@@ -341,22 +349,22 @@
         color: '#bae6fd',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '请看摄像头。', en: 'Please look at the camera.', audio: 'assets/audio/40415db54de921788dc885a12c40afb00229d0b2.mp3' },
-          { zh: '请扫描您的护照/登机证', en: 'Please scan your passport / boarding pass.', audio: 'assets/audio/bec1bdf6172964472b82fc1b686db70716b89eda.mp3' },
-          { zh: '请再试一次', en: 'Please try again.', audio: 'assets/audio/83a6fd7b7878408efca49683e8583d2235545f30.mp3' },
-          { zh: '请使用另一个闸口。', en: 'Please use another gate.', audio: 'assets/audio/862e8462c8f9a4a745f3a72fb696dbb08ba09e51.mp3' },
-          { zh: '请一个接一个地前往', en: 'Please proceed one by one.', audio: 'assets/audio/edca2d4f10abe719c19479ca398cdc712e920d66.mp3' },
-          { zh: '请脱下您的口罩/眼镜/帽子', en: 'Please take off your mask / glasses/ hat.', audio: 'assets/audio/3c58b84d49a5aaf56f73d74037321143ba62e659.mp3' },
-          { zh: '请问他/她几岁？他/她是11岁以下吗？', en: 'How old is he / she? Is he/she under 11 years old?', audio: 'assets/audio/5d3f9e9a358668904be11b703ee76f72951fa8c9.mp3' },
-          { zh: '抱歉，先生/女士，这本不是电子护照/这本护照没有电子芯片。', en: 'Sorry Sir / Madam, this is not an e-passport / This passport has no chip.', audio: 'assets/audio/ff0effbb195680a87f7b4bbb249d8276bb46f12e.mp3' },
-          { zh: '这个闸口机好像出现问题，请使用另一个闸口', en: 'There seems to be a problem with this machine, please try another one.', audio: 'assets/audio/adb406f7414afa9809cab87673c1968778d7a075.mp3' },
-          { zh: '请前往那边人工柜台', en: 'Please go to the assisted channel.', audio: 'assets/audio/c20c945285c9c7fb0b169fad5975a466997b0350.mp3' },
-          { zh: '请返回航空公司柜台寻求协助。', en: 'Please go back to your airline desk for help.', audio: 'assets/audio/0271519b6c9dd11ea94565d7e5de71d540832ab3.mp3' },
-          { zh: '抱歉，登机证上的姓名与护照上的姓名不符。', en: 'Sorry, the boarding pass name does not match with the passport.', audio: 'assets/audio/e93b71efabc50b4a3331c6ebeac72864b13a97c3.mp3' },
-          { zh: '名字拼写错误', en: 'The name is misspelled.', audio: 'assets/audio/f3e10f912989c21888fe314c62e22fe74e6b9a62.mp3' },
-          { zh: '名字无法完全显示', en: 'The name cannot be shown completely.', audio: 'assets/audio/44c7fa9394b2bf5a1e8b291d36ace31c514a778a.mp3' },
-          { zh: '这张登机证已过期', en: 'This boarding pass is expired.', audio: 'assets/audio/72ab69f97c11cf3a315b60ed1b3d11dacc455df4.mp3' },
-          { zh: '不好意思，系统显示你需要与航空公司联系', en: 'Sorry, the system shows that you need to contact the airline.', audio: 'assets/audio/7033598ec173a5c49cf341d8d16e16d539a61105.mp3' }
+          { zh: '请看摄像头。', en: 'Please look at the camera.', audio: '40415db54de921788dc885a12c40afb00229d0b2.mp3' },
+          { zh: '请扫描您的护照/登机证', en: 'Please scan your passport / boarding pass.', audio: 'bec1bdf6172964472b82fc1b686db70716b89eda.mp3' },
+          { zh: '请看摄像头。', en: 'Please look at the camera.', audio: '40415db54de921788dc885a12c40afb00229d0b2.mp3' },
+          { zh: '请使用另一个闸口。', en: 'Please use another gate.', audio: '862e8462c8f9a4a745f3a72fb696dbb08ba09e51.mp3' },
+          { zh: '请一个接一个地前往', en: 'Please proceed one by one.', audio: 'edca2d4f10abe719c19479ca398cdc712e920d66.mp3' },
+          { zh: '请脱下您的口罩/眼镜/帽子', en: 'Please take off your mask / glasses/ hat.', audio: '3c58b84d49a5aaf56f73d74037321143ba62e659.mp3' },
+          { zh: '请问他/她几岁？他/她是11岁以下吗？', en: 'How old is he / she? Is he/she under 11 years old?', audio: '5d3f9e9a358668904be11b703ee76f72951fa8c9.mp3' },
+          { zh: '抱歉，先生/女士，这本不是电子护照/这本护照没有电子芯片。', en: 'Sorry Sir / Madam, this is not an e-passport / This passport has no chip.', audio: 'ff0effbb195680a87f7b4bbb249d8276bb46f12e.mp3' },
+          { zh: '这个闸口机好像出现问题，请使用另一个闸口', en: 'There seems to be a problem with this machine, please try another one.', audio: 'adb406f7414afa9809cab87673c1968778d7a075.mp3' },
+          { zh: '请前往那边人工柜台', en: 'Please go to the assisted channel.', audio: 'c20c945285c9c7fb0b169fad5975a466997b0350.mp3' },
+          { zh: '请返回航空公司柜台寻求协助。', en: 'Please go back to your airline desk for help.', audio: '0271519b6c9dd11ea94565d7e5de71d540832ab3.mp3' },
+          { zh: '抱歉，登机证上的姓名与护照上的姓名不符。', en: 'Sorry, the boarding pass name does not match with the passport.', audio: 'e93b71efabc50b4a3331c6ebeac72864b13a97c3.mp3' },
+          { zh: '名字拼写错误', en: 'The name is misspelled.', audio: 'f3e10f912989c21888fe314c62e22fe74e6b9a62.mp3' },
+          { zh: '名字无法完全显示', en: 'The name cannot be shown completely.', audio: '44c7fa9394b2bf5a1e8b291d36ace31c514a778a.mp3' },
+          { zh: '这张登机证已过期', en: 'This boarding pass is expired.', audio: '72ab69f97c11cf3a315b60ed1b3d11dacc455df4.mp3' },
+          { zh: '不好意思，系统显示你需要与航空公司联系', en: 'Sorry, the system shows that you need to contact the airline.', audio: '7033598ec173a5c49cf341d8d16e16d539a61105.mp3' }
         ]
       },
       // ===== New Course: TAD HBL =====
@@ -366,10 +374,10 @@
         color: '#fecdd3',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '您的随身行李可能过大。请你过来让我们量度您的行李', en: 'Your carry-on bag seems to be oversized. Please come over so we can measure the luggage.', audio: 'assets/audio/93d604dcc2de706ed4f3f2cff2e537b5a6a47804.mp3' },
-          { zh: '抱歉，此手提物品不符合尺寸要求。', en: "I'm sorry, this hand-carry item does not meet the size requirements. / Your carry-on bag is oversized.", audio: 'assets/audio/98320f06e8d8ef522fbdafa8bef939dd6921fca6.mp3' },
-          { zh: '抱歉，航空公司规定每位乘客只允许携带一件手提行李。/ 您的随身行李太多了。', en: "I'm sorry, the airline policy allows each passenger to carry only one piece of hand-carry luggage. / You have too many carry-on bags.", audio: 'assets/audio/f0aee37b2e8425f97af4809a666917cfe5074807.mp3' },
-          { zh: '您可以选择重新整理您的随身行李。', en: 'You may choose to repack your hand-carry luggage.', audio: 'assets/audio/72bfff5a15782eb0d5e584be29ef24ded4e09e43.mp3' }
+          { zh: '您的随身行李可能过大。请你过来让我们量度您的行李', en: 'Your carry-on bag seems to be oversized. Please come over so we can measure the luggage.', audio: '93d604dcc2de706ed4f3f2cff2e537b5a6a47804.mp3' },
+          { zh: '抱歉，此手提物品不符合尺寸要求。', en: "I'm sorry, this hand-carry item does not meet the size requirements. / Your carry-on bag is oversized.", audio: '98320f06e8d8ef522fbdafa8bef939dd6921fca6.mp3' },
+          { zh: '抱歉，航空公司规定每位乘客只允许携带一件手提行李。/ 您的随身行李太多了。', en: "I'm sorry, the airline policy allows each passenger to carry only one piece of hand-carry luggage. / You have too many carry-on bags.", audio: 'f0aee37b2e8425f97af4809a666917cfe5074807.mp3' },
+          { zh: '您可以选择重新整理您的随身行李。', en: 'You may choose to repack your hand-carry luggage.', audio: '72bfff5a15782eb0d5e584be29ef24ded4e09e43.mp3' }
         ]
       },
       // ===== New Course: Useful Vocabularies - RA/DB =====
@@ -379,22 +387,20 @@
         color: '#fde68a',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '烟花', en: 'fireworks', audio: 'assets/audio/a85f18261c0688f38dd4067dd7f5757804e2750b.mp3' },
-          { zh: '胡椒喷剂', en: 'pepper spray', audio: 'assets/audio/1d08819045a27fa7042375404408ebbe7cbdf9f3.mp3' },
-          { zh: '开放式剃刀', en: 'open razors', audio: 'assets/audio/e507847f498a3ca9935205849dc0c97cf18cc5bc.mp3' },
-          { zh: '弹弓', en: 'slingshots', audio: 'assets/audio/45112fa79ea28084d9a1dfe6fb595fe238546796.mp3' },
-          { zh: '枪式打火机', en: 'gun lighters', audio: 'assets/audio/a4ad52af632d9f0f12a69cf2803a8f78f3d702f9.mp3' },
-          { zh: '催泪气体', en: 'tear gas', audio: 'assets/audio/3834d9fbfd34232becbe782c07260be05b70ba2c.mp3' },
-          { zh: '多功能小刀', en: 'utility knives', audio: 'assets/audio/9404ad9ab1375c9935745fb6be6edf2e5708a071.mp3' },
-          { zh: '弹簧折刀', en: 'flick knives', audio: 'assets/audio/9491dcd828113cf8ab88d178c6034042cde4e779.mp3' },
-          { zh: '剑', en: 'swords', audio: 'assets/audio/d6056e47d33a009d754613afbb20a3a386496177.mp3' },
-          { zh: '锤子', en: 'hammers', audio: 'assets/audio/5528a5c097d00089755d62e64cefde986a20394b.mp3' },
-          { zh: '钳子', en: 'pliers', audio: 'assets/audio/9aeea494fb97cd0272a532727164a5b601fe5119.mp3' },
-          { zh: '扳手/士巴拿', en: 'spanners', audio: 'assets/audio/edbcba64fc93b22ac37cb54402f8a522ea843fe8.mp3' },
-          { zh: '指节套', en: 'knuckledusters', audio: 'assets/audio/f8501842581e50600245c4563556b00ea77882a1.mp3' },
-          { zh: '双节棍', en: 'nunchaku', audio: 'assets/audio/513325a9f91f515c8fdf522b4ae849154b69c735.mp3' },
-          { zh: '库巴桑', en: 'kubasaunts', audio: 'assets/audio/8c0901027b95f61c10f9c9ae02d7ec3eb7dea4b5.mp3' },
-          { zh: '螺丝批', en: 'screwdrivers', audio: 'assets/audio/062b145d6e5d7d80d93e91bfa661941b02493d6b.mp3' }
+          { zh: '烟花', en: 'fireworks', audio: 'a85f18261c0688f38dd4067dd7f5757804e2750b.mp3' },
+          { zh: '胡椒喷剂', en: 'pepper spray', audio: '1d08819045a27fa7042375404408ebbe7cbdf9f3.mp3' },
+          { zh: '开放式剃刀', en: 'open razors', audio: 'e507847f498a3ca9935205849dc0c97cf18cc5bc.mp3' },
+          { zh: '弹弓', en: 'slingshots', audio: '45112fa79ea28084d9a1dfe6fb595fe238546796.mp3' },
+          { zh: '枪式打火机', en: 'gun lighters', audio: 'a4ad52af632d9f0f12a69cf2803a8f78f3d702f9.mp3' },
+          { zh: '催泪气体', en: 'tear gas', audio: '3834d9fbfd34232becbe782c07260be05b70ba2c.mp3' },
+          { zh: '多功能小刀', en: 'utility knives', audio: '9404ad9ab1375c9935745fb6be6edf2e5708a071.mp3' },
+          { zh: '弹簧折刀', en: 'flick knives', audio: '9491dcd828113cf8ab88d178c6034042cde4e779.mp3' },
+          { zh: '剑', en: 'swords', audio: 'd6056e47d33a009d754613afbb20a3a386496177.mp3' },
+          { zh: '锤子', en: 'hammers', audio: '5528a5c097d00089755d62e64cefde986a20394b.mp3' },
+          { zh: '钳子', en: 'pliers', audio: '9aeea494fb97cd0272a532727164a5b601fe5119.mp3' },
+          { zh: '双节棍', en: 'nunchaku', audio: '513325a9f91f515c8fdf522b4ae849154b69c735.mp3' },
+          { zh: '库巴桑', en: 'kubasaunts', audio: '8c0901027b95f61c10f9c9ae02d7ec3eb7dea4b5.mp3' },
+          { zh: '螺丝批', en: 'screwdrivers', audio: '062b145d6e5d7d80d93e91bfa661941b02493d6b.mp3' }
         ]
       },
       // ===== New Course: Useful Vocabularies - LAGs =====
@@ -404,18 +410,18 @@
         color: '#c4b5fd',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '香水', en: 'perfume', audio: 'assets/audio/71ea58aa789b63d377fa73c441348da5840bd0dc.mp3' },
-          { zh: '发胶', en: 'hair gel', audio: 'assets/audio/b1f12a940d3e0f0074bf61c1dab6ee2ce34d2437.mp3' },
-          { zh: '洗发水', en: 'shampoos', audio: 'assets/audio/c0416229eb7acdcea4de95cf365e78c1241232be.mp3' },
-          { zh: '防晒霜', en: 'sunscreen', audio: 'assets/audio/d205a5bffb98c164462cd8b4a3926938836e9b0c.mp3' },
-          { zh: '香氛喷雾', en: 'body spray', audio: 'assets/audio/57ad81b589a5f9d428b618f982ece4e3ff7e3781.mp3' },
-          { zh: '咳嗽糖浆', en: 'cough syrup', audio: 'assets/audio/637d5fc99710f5f25b8785204cca6fdcbfbf398e.mp3' },
-          { zh: '牙膏', en: 'toothpaste', audio: 'assets/audio/22ef5ba4d44a78205c392980e5c722f2f2f88727.mp3' },
-          { zh: '液体洗面奶', en: 'liquid face cleanser', audio: 'assets/audio/5db5addbcea10198a99d779ff0daae16e0d5230c.mp3' },
-          { zh: '乳液', en: 'lotions', audio: 'assets/audio/06f142ee2fb4ad4db0eb6b0b09eac1bf4c2df99a.mp3' },
-          { zh: '面霜', en: 'creams', audio: 'assets/audio/03287ac0afb395fd88a92182d8cc10f286f09e4e.mp3' },
-          { zh: '湯', en: 'soups', audio: 'assets/audio/0cee3930daa5845f23059b3008a8bc4e7b70e4b7.mp3' },
-          { zh: '醬汁', en: 'sauces', audio: 'assets/audio/de2327ce9be81e6cad9e75326e1bc139b876ace8.mp3' }
+          { zh: '香水', en: 'perfume', audio: '71ea58aa789b63d377fa73c441348da5840bd0dc.mp3' },
+          { zh: '发胶', en: 'hair gel', audio: 'b1f12a940d3e0f0074bf61c1dab6ee2ce34d2437.mp3' },
+          { zh: '洗发水', en: 'shampoos', audio: 'c0416229eb7acdcea4de95cf365e78c1241232be.mp3' },
+          { zh: '防晒霜', en: 'sunscreen', audio: 'd205a5bffb98c164462cd8b4a3926938836e9b0c.mp3' },
+          { zh: '香氛喷雾', en: 'body spray', audio: '57ad81b589a5f9d428b618f982ece4e3ff7e3781.mp3' },
+          { zh: '咳嗽糖浆', en: 'cough syrup', audio: '637d5fc99710f5f25b8785204cca6fdcbfbf398e.mp3' },
+          { zh: '牙膏', en: 'toothpaste', audio: '22ef5ba4d44a78205c392980e5c722f2f2f88727.mp3' },
+          { zh: '液体洗面奶', en: 'liquid face cleanser', audio: '5db5addbcea10198a99d779ff0daae16e0d5230c.mp3' },
+          { zh: '乳液', en: 'lotions', audio: '06f142ee2fb4ad4db0eb6b0b09eac1bf4c2df99a.mp3' },
+          { zh: '面霜', en: 'creams', audio: '03287ac0afb395fd88a92182d8cc10f286f09e4e.mp3' },
+          { zh: '湯', en: 'soups', audio: '0cee3930daa5845f23059b3008a8bc4e7b70e4b7.mp3' },
+          { zh: '醬汁', en: 'sauces', audio: 'de2327ce9be81e6cad9e75326e1bc139b876ace8.mp3' }
         ]
       },
       // ===== New Course: Useful Vocabularies - Carry-on Items =====
@@ -425,17 +431,17 @@
         color: '#bbf7d0',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '卷画', en: 'Scrolls', audio: 'assets/audio/c79dc6889c1f96c69ce4343f2fa853d3e7f4e4e3.mp3' },
-          { zh: '球拍', en: 'Rackets', audio: 'assets/audio/5897c368113afa34efb174587a85f2b4f8e2e5d9.mp3' },
-          { zh: '网球拍', en: 'Tennis rackets', audio: 'assets/audio/475ae388497bc998c3b6c5dc8994c9f81386a235.mp3' },
-          { zh: '羽毛球拍', en: 'Badminton Rackets', audio: 'assets/audio/ee60e7ef566ae6ec88ebebb295e07be734cc4d16.mp3' },
-          { zh: '乐器', en: 'Musical instruments', audio: 'assets/audio/21318bb509c683933f55b08f1a7d8273df6af7a1.mp3' },
-          { zh: '望远镜', en: 'Binoculars', audio: 'assets/audio/8bfa5c57e6fa7d43f84c21bd13857803759d70e8.mp3' },
-          { zh: '手提摄录机', en: 'Handheld camcorders', audio: 'assets/audio/aa764cbef9df0ec373b6cf8552f76e056edc3ab8.mp3' },
-          { zh: '笔记型电脑', en: 'Laptops', audio: 'assets/audio/8632c32a7b0a4b8b0c3856f9af2f93ff486719d2.mp3' },
-          { zh: '外套', en: 'Coats', audio: 'assets/audio/7283393894531e3e099a8df55337fd036ca4b515.mp3' },
-          { zh: '伞', en: 'Umbrellas', audio: 'assets/audio/b04e40d6c4b172a53c1b297ef8e44dbbe21358ea.mp3' },
-          { zh: '手杖', en: 'Walking sticks', audio: 'assets/audio/2c3af0b431b7855735e278a6f8823c824988258b.mp3' }
+          { zh: '卷画', en: 'Scrolls', audio: 'c79dc6889c1f96c69ce4343f2fa853d3e7f4e4e3.mp3' },
+          { zh: '球拍', en: 'Rackets', audio: '5897c368113afa34efb174587a85f2b4f8e2e5d9.mp3' },
+          { zh: '网球拍', en: 'Tennis rackets', audio: '475ae388497bc998c3b6c5dc8994c9f81386a235.mp3' },
+          { zh: '羽毛球拍', en: 'Badminton Rackets', audio: 'ee60e7ef566ae6ec88ebebb295e07be734cc4d16.mp3' },
+          { zh: '乐器', en: 'Musical instruments', audio: '21318bb509c683933f55b08f1a7d8273df6af7a1.mp3' },
+          { zh: '望远镜', en: 'Binoculars', audio: '8bfa5c57e6fa7d43f84c21bd13857803759d70e8.mp3' },
+          { zh: '手提摄录机', en: 'Handheld camcorders', audio: 'aa764cbef9df0ec373b6cf8552f76e056edc3ab8.mp3' },
+          { zh: '笔记型电脑', en: 'Laptops', audio: '8632c32a7b0a4b8b0c3856f9af2f93ff486719d2.mp3' },
+          { zh: '外套', en: 'Coats', audio: '7283393894531e3e099a8df55337fd036ca4b515.mp3' },
+          { zh: '伞', en: 'Umbrellas', audio: 'b04e40d6c4b172a53c1b297ef8e44dbbe21358ea.mp3' },
+          { zh: '手杖', en: 'Walking sticks', audio: '2c3af0b431b7855735e278a6f8823c824988258b.mp3' }
         ]
       },
       // ===== New Course: Useful Vocabularies - Liquids & Packaging =====
@@ -445,17 +451,17 @@
         color: '#fbcfe8',
         cover: 'assets/img/cover-greeting.jpg', // placeholder
         phrases: [
-          { zh: '液体', en: 'Liquid', audio: 'assets/audio/4ad3e2141b2afe3691f32c2af3fc5cc3653cd453.mp3' },
-          { zh: '凝胶', en: 'Gel', audio: 'assets/audio/5bc773e4b76960897f5d4cb9ee9a5eab48ca70cd.mp3' },
-          { zh: '喷雾', en: 'Aerosol', audio: 'assets/audio/69ebcd89b95787c443493ab302b0679113ca790e.mp3' },
-          { zh: '可重复密封透明塑胶袋', en: 'Transparent re-sealable plastic bag', audio: 'assets/audio/f814c4115bae34714a0a9030bbc8e06cb3872b48.mp3' },
-          { zh: '容器', en: 'Container', audio: 'assets/audio/e6443af99d2f470f50affd5057bf48db2d09dae4.mp3' },
-          { zh: '航空公司登记柜台', en: 'Airline check-in counter', audio: 'assets/audio/e3ce92bb6fd4b9c695466159b3008ce14eada6c1.mp3' },
-          { zh: '弃置', en: 'Disposal', audio: 'assets/audio/5fad6696d4de8beed28d84d5f68015a6a71582e2.mp3' },
-          { zh: '倒', en: 'Pour', audio: 'assets/audio/c4a8cc808fe01786c3a64f409b4374a71b635d20.mp3' },
-          { zh: '升', en: 'Litre', audio: 'assets/audio/7d43efc4d9e3d215e34a9b4b13e398e72a23bb71.mp3' },
-          { zh: '毫升', en: 'Millilitre', audio: 'assets/audio/f15b013b7c0f328a7e322f9cc3f84270f714dda6.mp3' },
-          { zh: '药物', en: 'Medication', audio: 'assets/audio/36da837e8b37f7433a84404f6a51700c59c816a8.mp3' }
+          { zh: '液体', en: 'Liquid', audio: '4ad3e2141b2afe3691f32c2af3fc5cc3653cd453.mp3' },
+          { zh: '凝胶', en: 'Gel', audio: '5bc773e4b76960897f5d4cb9ee9a5eab48ca70cd.mp3' },
+          { zh: '喷雾', en: 'Aerosol', audio: '69ebcd89b95787c443493ab302b0679113ca790e.mp3' },
+          { zh: '可重复密封透明塑胶袋', en: 'Transparent re-sealable plastic bag', audio: 'f814c4115bae34714a0a9030bbc8e06cb3872b48.mp3' },
+          { zh: '容器', en: 'Container', audio: 'e6443af99d2f470f50affd5057bf48db2d09dae4.mp3' },
+          { zh: '航空公司登记柜台', en: 'Airline check-in counter', audio: 'e3ce92bb6fd4b9c695466159b3008ce14eada6c1.mp3' },
+          { zh: '弃置', en: 'Disposal', audio: '5fad6696d4de8beed28d84d5f68015a6a71582e2.mp3' },
+          { zh: '倒', en: 'Pour', audio: 'c4a8cc808fe01786c3a64f409b4374a71b635d20.mp3' },
+          { zh: '升', en: 'Litre', audio: '7d43efc4d9e3d215e34a9b4b13e398e72a23bb71.mp3' },
+          { zh: '毫升', en: 'Millilitre', audio: 'f15b013b7c0f328a7e322f9cc3f84270f714dda6.mp3' },
+          { zh: '药物', en: 'Medication', audio: '36da837e8b37f7433a84404f6a51700c59c816a8.mp3' }
         ]
       },
       // (legacy combined direction_guide_1 course removed)
@@ -853,12 +859,14 @@ async function startRecording() {
 
     function startSession(course){
       qs('#courseTitle').textContent = course.title; qs('#summary').classList.remove('visible');
-  session = { course, idx:0, results:[], hard:new Set(), easy:new Set() };
-  // hide the static "課程列表" heading when the user starts a session
-  const practiceHeader = qs('#practice h2'); if(practiceHeader) practiceHeader.classList.add('hidden');
-  qs('#courseList').classList.add('hidden'); sessionBox.classList.remove('hidden');
-  try { qs('#btnExitCourse')?.classList.remove('hidden'); } catch(_) {}
-  loadCard();
+      session = { course, idx:0, results:[], hard:new Set(), easy:new Set() };
+      // hide the static "課程列表" heading when the user starts a session
+      const practiceHeader = qs('#practice h2'); if(practiceHeader) practiceHeader.classList.add('hidden');
+      qs('#courseList').classList.add('hidden'); sessionBox.classList.remove('hidden');
+      // show exit button once
+      try { qs('#btnExitCourse')?.classList.remove('hidden'); } catch(_) {}
+      // load first card
+      loadCard();
     }
     // Exit current practice session back to the course list (invoked on re-click of Practice tab)
     function exitPracticeToCourseList(){
@@ -885,7 +893,7 @@ async function startRecording() {
         try { qs('#summary')?.classList.remove('visible'); } catch(_) {}
         // Hide exit button
         try { qs('#btnExitCourse')?.classList.add('hidden'); } catch(_) {}
-      } catch(e){ /* swallow */ }
+      /* swallow */
     }
 
     function loadCard(){
@@ -913,7 +921,7 @@ async function startRecording() {
     btnPlay.addEventListener('click', ()=>{
       if (!session || !session.course) return;
       const p = session.course.phrases[session.idx];
-      currentStandardUrl = new URL(p.audio, location.href).href;
+      currentStandardUrl = new URL(resolveAudio(p.audio), location.href).href;
       const isStdPlaying = (audioEl.src === currentStandardUrl) && !audioEl.paused;
       if (isStdPlaying) {
         try { audioEl.pause(); audioEl.currentTime = 0; } catch(_) {}
@@ -1334,4 +1342,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
