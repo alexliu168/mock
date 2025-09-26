@@ -862,8 +862,6 @@ async function startRecording() {
     }
     // Exit current practice session back to the course list (invoked on re-click of Practice tab)
     function exitPracticeToCourseList(){
-      try {
-        // Stop any ongoing recording
         try { if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch(_) {}
         clearRecordTimers?.();
         // Reset UI state

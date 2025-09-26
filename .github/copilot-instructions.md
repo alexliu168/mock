@@ -3,7 +3,7 @@
 Purpose: Lightweight browser + PHP demo for English service phrase practice. Features: invite-code session auth, audio recording + external speech scoring (Tencent SOE legacy `eval.php` and SpeechAce primary `eval-sa.php`), per-user and overall CSV–driven reporting, minimal PWA shell.
 
 ## Architecture Snapshot
-- Entry/Login: `v1/morningsir2.php` (staging name; will be renamed back to `morningsir.php` when ready to publish) handles session cookie (14‑day) + inline invite code form. On success injects `SESSION_USER` + `DISPLAY_NAME` into first `<script>` of `mainapp.html`. Until the rename happens, references/redirects (e.g. manifest `start_url`, redirects in `eval.php`) still point to `morningsir.php`; local setups should either create a temporary alias or just access `morningsir2.php` directly during development.
+- Entry/Login: `v1/morningsir.php` handles session cookie (14‑day) + inline invite code form. On success injects `SESSION_USER` + `DISPLAY_NAME` into first `<script>` of `mainapp.html`. All references/redirects (manifest `start_url`, redirects in `eval.php`, `eval-sa.php`) point to `morningsir.php`.
 - Frontend: Single-page `v1/mainapp.html` (≈1000 lines) with inline JS (no build step) managing tabs (home/practice/reports/profile), localStorage (nick + stats), audio capture (MediaRecorder or fallback), scoring fetch to `eval-sa.php` (SpeechAce) or legacy `eval.php` (Tencent). Assets under `v1/assets/**`.
 - Speech Evaluation Endpoints:
   - `eval-sa.php`: Primary endpoint. Accepts multipart (audio + text [+ flags]) and calls SpeechAce API (`/api/scoring/text/v9/json`). Produces compact JSON plus optional Simplified Chinese HTML summary (`summary_zh`). Implements: strict session reuse (never creates new), optional audio persistence (`save_audio`), JSONL server logging via `append_eval_server_log()` to `uploads/evallog/evalresult-<MM-DD>.log`.
@@ -12,7 +12,7 @@ Purpose: Lightweight browser + PHP demo for English service phrase practice. Fea
 - Reports: CSV store `v1/reports/practice_data.csv` (headers: ts,user_id,phrase_uid,request_id,pron,flu,ielts_pron,ielts_flu,speech_rate,pause_count,attempt_no). Rendered by:
   - `reports/report_individual.php`: Enforces session; non‑Admin users can only view self (`user_id` from session). Options: `excludeZeros=1`, `dailyAvg=0|1` (default on unless query present), `showScatter=1`, `trend_phrase=<phrase_uid>`.
   - `reports/report_overall.php`: No auth gate here; consider restricting if exposing publicly. Option: `excludeZeros=1`.
-- PWA: `manifest.json` points `start_url` to `morningsir.php` (future production name). Do NOT change this until you intentionally publish the `morningsir2.php` version (then rename the file instead of editing the manifest to avoid cache churn).
+- PWA: `manifest.json` points `start_url` to `morningsir.php`. App is now in production; all components reference the production entry point consistently.
 
 ## Conventions & Patterns
 - Session auth: Presence of `$_SESSION['invite_code']`; Admin capabilities when `invite_label/name` starts with `Admin` (e.g., shows overall report button, cross-user report access).
@@ -35,6 +35,8 @@ Purpose: Lightweight browser + PHP demo for English service phrase practice. Fea
 
 ## Local Dev & Testing Notes
 - No build step: edit PHP/HTML directly. Ensure web server has `curl` + `openssl` extensions for Tencent/SpeechAce calls.
+- Setup: Copy `lib/setup-sa.sample.php` to `lib/setup-sa.php` and configure `SPEECHACE_API_KEY`. Optional settings: `SPEECHACE_API_URL`, `MS_SAVE_AUDIO`.
+- Audio generation: `makemp3/makemp3.py` generates MP3 files from text using Tencent TTS. Requires `TENCENT_SECRET_ID` and `TENCENT_SECRET_KEY` environment variables.
 - Health check: `GET eval.php?ping=1` returns environment flags (`curl_loaded`, `openssl_loaded`, `session`).
 - To trace evaluation issues: tail `uploads/evallog/evalresult-<MM-DD>.log` or user `uploads/<CODE>/logs/client.log` (enable `window.MS_DEBUG=true` early).
 
