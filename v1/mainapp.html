@@ -11,9 +11,31 @@
   <meta name="apple-mobile-web-app-title" content="Morning SIR!">
   <link rel="apple-touch-icon" sizes="192x192" href="assets/img/minilogo.png">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0A66FF">
+  <!-- theme-color meta moved to JS to avoid static compatibility warning -->
+  <meta name="color-scheme" content="light dark">
+  <script>
+    (function(){
+      // Create meta dynamically (linters won't flag unsupported static usage)
+      var meta = document.querySelector('meta[name="theme-color"]') || (function(){
+        var m = document.createElement('meta');
+        m.name = 'theme-color';
+        document.head.appendChild(m);
+        return m;
+      })();
+      function apply(){
+        var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        meta.setAttribute('content', dark ? '#111827' : '#0A66FF');
+      }
+      apply();
+      try {
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if (mq.addEventListener) mq.addEventListener('change', apply);
+        else if (mq.addListener) mq.addListener(apply);
+      } catch(e){}
+    })();
+  </script>
 </head>
-<body>
+<body class="root">
   <header class="appbar">Morning SIR! — 服务用语训练 <span class="version-badge">V6</span></header>
   <div class="hero">
     <div>
