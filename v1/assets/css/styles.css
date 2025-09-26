@@ -73,11 +73,11 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 .appbar{ position:sticky; top:0; display:flex; align-items:center; justify-content:center; font-weight:700; box-sizing:border-box;
 	/* Transparent header so hero plane shows behind */
 	background: transparent; color:#06337a;
-	/* Fully respect top safe area inside the header */
-	padding-top: constant(safe-area-inset-top);
-	padding-top: env(safe-area-inset-top, 0px);
-	height: calc(56px + constant(safe-area-inset-top));
-	height: calc(56px + env(safe-area-inset-top, 0px));
+	/* Use half top safe area so title sits closer to the island while still respecting the notch */
+	padding-top: calc(constant(safe-area-inset-top) / 2);
+	padding-top: calc(env(safe-area-inset-top, 0px) / 2);
+	height: calc(56px + (constant(safe-area-inset-top) / 2));
+	height: calc(56px + (env(safe-area-inset-top, 0px) / 2));
 }
 .hero{
 	/* Title plane background */
