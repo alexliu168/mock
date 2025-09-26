@@ -61,7 +61,7 @@
 /* Core layout and component styles moved from morningsir.html */
 .\:root, :root { /* CSS variables for dynamic layout measurements */
 	/* Good first-paint defaults (JS will overwrite after layout) */
-	--appbar-h: calc(56px + env(safe-area-inset-top, 0px));
+	--appbar-h: calc(56px + (env(safe-area-inset-top, 0px) / 2));
 	--tabbar-h: calc(64px + env(safe-area-inset-bottom, 0px));
 }
 .root{ --brand:#0A66FF; --ink:#0F172A; --muted:#64748B; --bg:#F8FAFC; --card:#FFFFFF; --accent:#111827; --radius:16px; --shadow:0 10px 30px rgba(2,8,23,.08); --background-opacity: 0.3; }
@@ -85,17 +85,17 @@ body::before{ content:""; position:fixed; inset:0; background:url('../img/bg-air
 	/* Pull hero upward so its background starts at the top pixel (behind header) */
 	margin-top: calc(-1 * var(--appbar-h));
 	/* Keep hero content visually below header; appbar height already includes safe-area */
-	padding-top: calc(var(--appbar-h) + 12px);
-	/* More compact hero height using small viewport units on mobile */
-	min-height: clamp(180px, 30svh, 420px);
+	padding-top: calc(var(--appbar-h) + 6px);
+	/* Even more compact hero height using small viewport units on mobile */
+	min-height: clamp(150px, 24svh, 360px);
 	display:flex; align-items:center; padding-left:16px; padding-right:16px;
 	color:#06337a; font-weight:600; border-bottom:1px solid #e2e8f0;
 }
 
-/* Arrange header logo and subtitle horizontally */
-.hero > div{ display:flex; align-items:center; gap:14px; }
+/* Arrange header logo and subtitle horizontally (tighter gap) */
+.hero > div{ display:flex; align-items:center; gap:10px; }
 
-.header-sub{ font-size:24px; opacity:.8; }
+.header-sub{ font-size:22px; line-height:1.2; opacity:.8; }
 .view{padding:16px} .card{background:rgba(255, 255, 255, var(--background-opacity)); border-radius:var(--radius); box-shadow:var(--shadow)}
 .list{display:grid; gap:12px}
 .course{ display:flex; gap:12px; align-items:center; padding:14px 16px; cursor:pointer; }
