@@ -625,7 +625,8 @@ function deriveMistakesFromSoe(soeWords, fallbackWords) {
                 if (!frame || embedWrap?.classList?.contains('hidden')) return;
                 const rectTop = frame.getBoundingClientRect().top;
                 const vh = window.innerHeight || document.documentElement.clientHeight || 600;
-                const target = Math.max(200, vh - rectTop - 12);
+                const tabbarH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tabbar-h')||'64', 10) || 64;
+                const target = Math.max(200, vh - rectTop - tabbarH - 12);
                 frame.style.height = target + 'px';
               } catch(_) {}
             };

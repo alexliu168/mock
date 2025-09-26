@@ -60,8 +60,9 @@
 
 /* Core layout and component styles moved from morningsir.html */
 .\:root, :root { /* CSS variables for dynamic layout measurements */
-	--appbar-h: 56px; /* JS will overwrite after layout */
-	--tabbar-h: 64px; /* JS will overwrite after layout */
+	/* Good first-paint defaults (JS will overwrite after layout) */
+	--appbar-h: calc(56px + env(safe-area-inset-top, 0px));
+	--tabbar-h: calc(64px + env(safe-area-inset-bottom, 0px));
 }
 .root{ --brand:#0A66FF; --ink:#0F172A; --muted:#64748B; --bg:#F8FAFC; --card:#FFFFFF; --accent:#111827; --radius:16px; --shadow:0 10px 30px rgba(2,8,23,.08); --background-opacity: 0.3; }
 *{box-sizing:border-box}
