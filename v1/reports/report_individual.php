@@ -174,13 +174,15 @@ if ($dailyAvg) {
   }
   ksort($byDay);
   foreach ($byDay as $d => $v) {
-    $trendTs[]   = $d . ' 00:00:00';
+    // Use epoch milliseconds to avoid Safari date parsing issues
+    $trendTs[]   = strtotime($d . ' 00:00:00') * 1000;
     $trendPron[] = round(safe_avg((float)$v[0], (int)$v[1]), 2);
     $trendFlu[]  = round(safe_avg((float)$v[2], (int)$v[3]), 2);
   }
 } else {
   foreach ($rowsForTrend as $r) {
-    $trendTs[]   = $r['ts'];
+    // Use epoch milliseconds for full timestamps as well
+    $trendTs[]   = $r['ts'] ? (strtotime($r['ts']) * 1000) : null;
     $trendPron[] = $r['pron'];
     $trendFlu[]  = $r['flu'];
   }
@@ -236,7 +238,8 @@ $data = [
   .kpi p{margin:4px 0 0;font-size:28px;font-weight:700}
   .row{display:grid;grid-template-columns:1fr;gap:16px}
   @media (min-width: 960px){ .row{grid-template-columns:1fr 1fr} }
-  canvas{width:100% !important;height:auto !important}
+  canvas{width:100% !important;height:auto !important;min-height:260px}
+  @media (min-width: 960px){ canvas{min-height:320px} }
   .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
   .toolbar a, .toolbar button{padding:6px 10px;border-radius:10px;background:#eee;text-decoration:none;color:#333;border:0;cursor:pointer}
   .toolbar a.active{background:#111;color:#fff}
@@ -349,8 +352,12 @@ const palette = {
     const t = DATA.trend.ts[i];
     const p = DATA.trend.pron[i];
     const f = DATA.trend.flu[i];
-    if (typeof p === 'number' && Number.isFinite(p)) pronPts.push({ x: new Date(t), y: p });
-    if (typeof f === 'number' && Number.isFinite(f)) fluPts.push({ x: new Date(t), y: f });
+    // t is epoch milliseconds; guard nulls
+    if (t != null) {
+      const dt = new Date(Number(t));
+      if (typeof p === 'number' && Number.isFinite(p)) pronPts.push({ x: dt, y: p });
+      if (typeof f === 'number' && Number.isFinite(f)) fluPts.push({ x: dt, y: f });
+    }
   }
 
   new Chart(document.getElementById('chartTrend'), {
