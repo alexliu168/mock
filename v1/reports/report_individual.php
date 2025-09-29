@@ -301,12 +301,55 @@ $data = [
   </p>
 </div>
 
-<!-- Chart.js must load before the date adapter -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<!-- Robust loader: try multiple CDNs for Chart.js and the adapter, then render charts -->
 <script>
 const DATA = <?= json_encode($data, JSON_UNESCAPED_UNICODE) ?>;
 
+function loadScriptSequential(urls) {
+  return new Promise((resolve, reject) => {
+    let i = 0;
+    const next = () => {
+      if (i >= urls.length) return reject(new Error('All script sources failed'));
+      const src = urls[i++];
+      const s = document.createElement('script');
+      s.src = src; s.async = true; s.onload = () => resolve(src); s.onerror = next;
+      document.head.appendChild(s);
+    };
+    next();
+  });
+}
+
+async function ensureChartsLoaded() {
+  const chartURLs = [
+    'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
+    'https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
+  ];
+  const adapterURLs = [
+    'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns',
+    'https://unpkg.com/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.min.js'
+  ];
+  if (typeof window.Chart === 'undefined') {
+    await loadScriptSequential(chartURLs);
+  }
+  // Adapter is needed for time scale; safe to attempt even if already present
+  await loadScriptSequential(adapterURLs).catch(() => {});
+}
+
+function showLoadError() {
+  const msg = '图表库加载失败，可能被网络阻断。请检查网络或稍后重试。';
+  const ph = document.getElementById('chartPhrases');
+  const tr = document.getElementById('chartTrend');
+  if (ph) ph.replaceWith(Object.assign(document.createElement('div'), {textContent: msg, style: 'padding:12px;color:#b91c1c'}));
+  if (tr) tr.replaceWith(Object.assign(document.createElement('div'), {textContent: msg, style: 'padding:12px;color:#b91c1c'}));
+  <?php if ($showScatter): ?>
+  const sc = document.getElementById('chartScatter');
+  if (sc) sc.replaceWith(Object.assign(document.createElement('div'), {textContent: msg, style: 'padding:12px;color:#b91c1c'}));
+  <?php endif; ?>
+}
+
+async function initCharts(){
 // KPIs
 document.getElementById('k_attempts').textContent = DATA.overall.attempts;
 document.getElementById('k_phrases').textContent  = DATA.overall.phrases;
@@ -412,6 +455,17 @@ const palette = {
   });
 })();
 <?php endif; ?>
+}
+
+(async () => {
+  try {
+    await ensureChartsLoaded();
+    await initCharts();
+  } catch (e) {
+    console.error('Chart load/init failed', e);
+    showLoadError();
+  }
+})();
 </script>
 </body>
 </html>
