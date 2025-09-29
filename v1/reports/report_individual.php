@@ -305,6 +305,12 @@ $data = [
 <script>
 const DATA = <?= json_encode($data, JSON_UNESCAPED_UNICODE) ?>;
 
+// Render KPIs immediately (no dependency on Chart.js)
+document.getElementById('k_attempts').textContent = DATA.overall.attempts;
+document.getElementById('k_phrases').textContent  = DATA.overall.phrases;
+document.getElementById('k_pron').textContent     = Number(DATA.overall.avgPron).toFixed(1);
+document.getElementById('k_flu').textContent      = Number(DATA.overall.avgFlu).toFixed(1);
+
 function loadScriptSequential(urls) {
   return new Promise((resolve, reject) => {
     let i = 0;
@@ -321,11 +327,14 @@ function loadScriptSequential(urls) {
 
 async function ensureChartsLoaded() {
   const chartURLs = [
+    // Prefer local vendored copies if present
+    'v1/assets/js/chart.umd.min.js',
     'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
     'https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
   ];
   const adapterURLs = [
+    'v1/assets/js/chartjs-adapter-date-fns.min.js',
     'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns',
     'https://unpkg.com/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.min.js'
@@ -338,15 +347,61 @@ async function ensureChartsLoaded() {
 }
 
 function showLoadError() {
-  const msg = '图表库加载失败，可能被网络阻断。请检查网络或稍后重试。';
-  const ph = document.getElementById('chartPhrases');
-  const tr = document.getElementById('chartTrend');
-  if (ph) ph.replaceWith(Object.assign(document.createElement('div'), {textContent: msg, style: 'padding:12px;color:#b91c1c'}));
-  if (tr) tr.replaceWith(Object.assign(document.createElement('div'), {textContent: msg, style: 'padding:12px;color:#b91c1c'}));
+  // Fallback: render simple tables so the user still sees data
+  renderPerPhraseFallback();
+  renderTrendFallback();
   <?php if ($showScatter): ?>
-  const sc = document.getElementById('chartScatter');
-  if (sc) sc.replaceWith(Object.assign(document.createElement('div'), {textContent: msg, style: 'padding:12px;color:#b91c1c'}));
+  // optional: could add scatter fallback later
   <?php endif; ?>
+}
+
+function renderPerPhraseFallback(){
+  const host = document.getElementById('chartPhrases');
+  if (!host) return;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div style="padding:12px 0 4px;color:#b91c1c">图表库加载失败，显示表格替代。</div>`;
+  const tbl = document.createElement('table');
+  tbl.style.width = '100%';
+  tbl.style.borderCollapse = 'collapse';
+  tbl.innerHTML = `<thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid #eee">句子</th><th style="text-align:right;padding:6px;border-bottom:1px solid #eee">发音</th><th style="text-align:right;padding:6px;border-bottom:1px solid #eee">流畅</th></tr></thead>`;
+  const tb = document.createElement('tbody');
+  (DATA.perPhrase || []).forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="padding:6px;border-bottom:1px solid #f2f2f2">${r.phrase}</td>
+                    <td style="padding:6px;border-bottom:1px solid #f2f2f2;text-align:right">${Number(r.pron).toFixed(1)}</td>
+                    <td style="padding:6px;border-bottom:1px solid #f2f2f2;text-align:right">${Number(r.flu).toFixed(1)}</td>`;
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+  wrap.appendChild(tbl);
+  host.replaceWith(wrap);
+}
+
+function renderTrendFallback(){
+  const host = document.getElementById('chartTrend');
+  if (!host) return;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<div style="padding:12px 0 4px;color:#b91c1c">图表库加载失败，显示表格替代。</div>`;
+  const tbl = document.createElement('table');
+  tbl.style.width = '100%';
+  tbl.style.borderCollapse = 'collapse';
+  tbl.innerHTML = `<thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid #eee">日期</th><th style="text-align:right;padding:6px;border-bottom:1px solid #eee">发音</th><th style="text-align:right;padding:6px;border-bottom:1px solid #eee">流畅</th></tr></thead>`;
+  const tb = document.createElement('tbody');
+  for (let i=0;i<(DATA.trend.ts||[]).length;i++){
+    const t = DATA.trend.ts[i];
+    const p = DATA.trend.pron[i];
+    const f = DATA.trend.flu[i];
+    const dt = t!=null ? new Date(Number(t)) : null;
+    const ds = dt ? dt.toISOString().slice(0,10) : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="padding:6px;border-bottom:1px solid #f2f2f2">${ds}</td>
+                    <td style="padding:6px;border-bottom:1px solid #f2f2f2;text-align:right">${(typeof p==='number'&&isFinite(p))?p.toFixed(1):''}</td>
+                    <td style="padding:6px;border-bottom:1px solid #f2f2f2;text-align:right">${(typeof f==='number'&&isFinite(f))?f.toFixed(1):''}</td>`;
+    tb.appendChild(tr);
+  }
+  tbl.appendChild(tb);
+  wrap.appendChild(tbl);
+  host.replaceWith(wrap);
 }
 
 async function initCharts(){
