@@ -238,7 +238,7 @@ $data = [
   .kpi p{margin:4px 0 0;font-size:28px;font-weight:700}
   .row{display:grid;grid-template-columns:1fr;gap:16px}
   @media (min-width: 960px){ .row{grid-template-columns:1fr 1fr} }
-  canvas{width:100% !important;height:auto !important;min-height:260px}
+  canvas{width:100% !important;display:block;min-height:260px}
   @media (min-width: 960px){ canvas{min-height:320px} }
   .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
   .toolbar a, .toolbar button{padding:6px 10px;border-radius:10px;background:#eee;text-decoration:none;color:#333;border:0;cursor:pointer}
@@ -336,6 +336,7 @@ const palette = {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
         y: {beginAtZero: true, max: 100, grid: {color: palette.grid}},
         x: {grid: {display:false}}
@@ -360,6 +361,7 @@ const palette = {
     }
   }
 
+  console.log('trend points', {pron: pronPts.length, flu: fluPts.length});
   new Chart(document.getElementById('chartTrend'), {
     type: 'line',
     data: {
@@ -370,6 +372,7 @@ const palette = {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'nearest', intersect: false },
       parsing: true,
       spanGaps: true,
@@ -394,11 +397,13 @@ const palette = {
     .map(([x,y]) => ({ x: Number(x), y: Number(y) }))
     .filter(pt => Number.isFinite(pt.x) && Number.isFinite(pt.y));
 
+  console.log('scatter points', points.length);
   new Chart(document.getElementById('chartScatter'), {
     type: 'scatter',
     data: { datasets: [{ label: 'Attempts', data: points, pointRadius: 3, pointHoverRadius: 5, backgroundColor: 'rgba(53, 162, 235, 0.8)' }] },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
         x: { title:{display:true,text:'Pronunciation'}, min:0, max:100, grid:{color: palette.grid} },
         y: { title:{display:true,text:'Fluency'},       min:0, max:100, grid:{color: palette.grid} }
