@@ -327,14 +327,14 @@ function loadScriptSequential(urls) {
 
 async function ensureChartsLoaded() {
   const chartURLs = [
-    // Prefer local vendored copies if present
-    'v1/assets/js/chart.umd.min.js',
+    // Prefer local vendored copies if present (relative to /v1/reports/)
+    '../assets/js/chart.umd.min.js',
     'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
     'https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
   ];
   const adapterURLs = [
-    'v1/assets/js/chartjs-adapter-date-fns.min.js',
+    '../assets/js/chartjs-adapter-date-fns.bundle.min.js',
     'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns',
     'https://unpkg.com/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.min.js'
